@@ -42,7 +42,7 @@ namespace Server
 		}
 	}
 
-	GameEngine::GameEngine() : hero(_Food, "myHero")
+	GameEngine::GameEngine() : hero("myHero")
 	{
 		_GameOver = false;
 		srand(time(NULL));
@@ -167,21 +167,28 @@ namespace Server
 				}
 				Hero["Pieces"] = HeroPieceArray;
 			}
-
-			if (Hero["Feeded"] == true)
+			nlohmann::json FeedArray = nlohmann::json::array();
+			for (const auto& f : hero.getListFeeds())
 			{
-				nlohmann::json FeedArray = nlohmann::json::array();
-				for (const auto& f : hero.feeds)
-				{
-					nlohmann::json Feed;
-					Feed["Center"] = { {"x", f->getCenter().x},{ "y", f->getCenter().y} };
-					Feed["Radius"] = f->getRadius();
-					Feed["id"] = f->getID();
+				nlohmann::json Feed;
+				Feed["Center"] = { {"x", f->getCenter().x},{ "y", f->getCenter().y} };
+				Feed["Radius"] = f->getRadius();
+				Feed["id"] = f->getID();
+				Feed["state"] = static_cast<int>(f->state);
+				Feed["Speed"]["x"] = f->getSpeed().x;
+				Feed["Speed"]["y"] = f->getSpeed().y;
+				cout << "ENGINE" << endl;
+				cout << "FeedSpeed: " << Feed["Speed"]["x"] << "    " << Feed["Speed"]["y"] << endl;
+				cout << "FeedCoords: " << Feed["Center"]["x"] << "    " << Feed["Center"]["y"] << endl;
+				cout << "heroCenterX: " << Hero["Center"]["x"] << "   " << "heroCenterY: " << Hero["Center"]["y"] << endl << endl << endl;
 
-					FeedArray.push_back(Feed);
-				}
-				Hero["Feeds"] = FeedArray;
+				FeedArray.push_back(Feed);
 			}
+			Hero["Feeds"] = FeedArray;
+			/*if (Hero["Feeded"] == true)
+			{
+				
+			}*/
 			response["Hero"] = Hero;
 
 			nlohmann::json FoodArray = nlohmann::json::array();
@@ -243,6 +250,10 @@ namespace Server
 			hero.TimeElapsed(diff);
 		checkStatus(bots, diff);
 		checkStatus(_Food, diff);
+	
+		cout << "begin" << "   ";
+		checkStatus(hero.getListFeeds(), diff);
+		cout << "   " << "end";
 		checkStatus(_ThornSprite, diff);
 
 		allObjectsCollWithMap();
@@ -254,6 +265,19 @@ namespace Server
 		}
 
 		for (auto& i = _Food.begin(); i != _Food.end(); ++i)
+		{
+			for (auto j = bots.begin(); j != bots.end(); j++)
+			{
+				(*j)->Eat((*i).get());
+			}
+		}
+
+		for (auto& i = hero.getListFeeds().begin(); i != hero.getListFeeds().end(); ++i)
+		{
+			hero.Eat((*i).get());
+		}
+
+		for (auto& i = hero.getListFeeds().begin(); i != hero.getListFeeds().end(); ++i)
 		{
 			for (auto j = bots.begin(); j != bots.end(); j++)
 			{
@@ -332,7 +356,7 @@ namespace Server
 		if (isCollWithMap(hero.getCenter()))
 			hero.setCenter(getCoorCollWithMap(hero.getCenter()));
 
-		for (auto& f : hero.feeds)
+		for (auto& f : hero.getListFeeds())
 		{
 			if (isCollWithMap(f->getCenter()))
 				f->setCenter(getCoorCollWithMap(f->getCenter()));

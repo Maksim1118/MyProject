@@ -8,7 +8,7 @@ using namespace sf;
 using namespace std;
 namespace Server 
 {
-	class MoveObject: public virtual Objects
+	class MoveObject: public Objects
 	{
 	public:
 		MoveObject(Vector2f center, float mass);

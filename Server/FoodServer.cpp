@@ -32,9 +32,6 @@ namespace Server
 			return false;
 		if (obj->Eating((*this), -getRadius()))
 		{
-			cout << "Radius Object: " << obj->getRadius() << endl;
-			cout << "Coord Object: " << obj->getCenter().x << " " << obj->getCenter().y << endl;
-			cout << "Coord Food: " << getCenter().x << " " << getCenter().y << endl;
 			return true;
 		}
 		return false;

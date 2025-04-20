@@ -4,7 +4,7 @@
 
 namespace Server
 {
-	Piece::Piece() : Objects(Vector2f(0, 0), 400.f),MoveObject(Vector2f(0, 0), 400.f)
+	Piece::Piece() : MoveObject(Vector2f(0, 0), 400.f)
 	{
 		V = { 0.f,0.f };
 		maxV = 0.001f;

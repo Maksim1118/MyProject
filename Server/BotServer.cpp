@@ -4,7 +4,7 @@
 
 namespace Server
 {
-	Bot::Bot(string text) :Objects(Vector2f(0, 0), 400.000f),  MoveObject(Vector2f(0, 0), 400.000f), respawnTime(5000), curTime(0)
+	Bot::Bot(string text) :MoveObject(Vector2f(0, 0), 400.000f), respawnTime(5000), curTime(0)
 	{
 		name = text;
 		prevMass = _mass;
