@@ -120,7 +120,7 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 					hero->pieces = tempHeroPieces;
 					tempHeroPieces.clear();
 				}
-				for (const auto& f : obj["Feeds"])
+				/*for (const auto& f : obj["Feeds"])
 				{
 					if (f["state"] != 0)
 						continue;
@@ -146,7 +146,7 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 							tempObjects.push_back(feed);
 						}
 					}
-				}
+				}*/
 			}
 				
 			if (response.contains("listFood"))
@@ -174,6 +174,38 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 						if (food)
 						{
 							tempObjects.push_back(food);
+						}
+					}
+				}
+			}
+
+			if (response.contains("listFeed"))
+			{
+
+				for (const auto& f : response["listFeed"])
+				{
+					if (f["state"] != 0)
+						continue;
+					int FeedId = static_cast<int>(f["id"]);
+					auto itFeed = find_if(objects.begin(), objects.end(), [FeedId](const shared_ptr<Objects>& o)
+						{
+							return o->getID() == FeedId;
+						});
+					shared_ptr<Feed> feed;
+					if (itFeed == objects.end())
+					{
+						feed = make_shared<Feed>(Vector2f(f["Center"]["x"], f["Center"]["y"]), f["Radius"], f["id"]);
+						feed->setSpeed(Vector2f(f["Speed"]["x"], f["Speed"]["y"]));
+						tempObjects.push_back(feed);
+					}
+					else
+					{
+						feed = dynamic_pointer_cast<Feed>(*itFeed);
+						if (feed)
+						{
+							feed->setSpeed(Vector2f(f["Speed"]["x"], f["Speed"]["y"]));
+							feed->setDifference(Vector2f(f["Center"]["x"], f["Center"]["y"]) - itFeed->get()->getCenter());
+							tempObjects.push_back(feed);
 						}
 					}
 				}

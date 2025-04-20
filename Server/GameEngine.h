@@ -31,6 +31,8 @@ namespace  Server
 		Hero hero;
 		list<shared_ptr<Bot>> bots{};
 	private:
+		list<shared_ptr<Feed>> m_ListFeeds;
+		nlohmann::json getInformationHero(Hero& hero);
 		template<typename T> void shift(T* ptrObj);
 		template<typename T> void fillList(list<shared_ptr<T>>& list, size_t size, string str);
 		void allObjectsCollWithMap();

@@ -16,14 +16,13 @@ namespace Server
 	class Hero : public Bot
 	{
 	public:
-		Hero(string  text);
+		Hero(list<shared_ptr<Feed>>& feeds, string text);
 		Hero& operator =(const Hero&);
 		void setFeeded();
 		bool isFeeded();
-		list<shared_ptr<Feed>>& getListFeeds();
 	private:
+		list<shared_ptr<Feed>> &m_ListFeeds;
 		bool Feeded;
-		list<shared_ptr<Feed>> listFeeds{};
 		void createFeed(Objects& obj);
 	};
 }

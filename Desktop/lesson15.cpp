@@ -1,8 +1,4 @@
-﻿// lesson15.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
-
-
+﻿
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "SceneManager.h"

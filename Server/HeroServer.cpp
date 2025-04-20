@@ -5,7 +5,7 @@
 
 namespace Server
 {
-	Hero::Hero(string  text) : Bot(text)
+	Hero::Hero(list<shared_ptr<Feed>>& feeds, string  text) : m_ListFeeds(feeds), Bot(text)
 	{
 		Feeded = false;
 	}
@@ -15,7 +15,7 @@ namespace Server
 		Splitted = other.Splitted;
 		Feeded = other.Feeded;
 		pieces = other.pieces;
-		listFeeds = other.listFeeds;
+		m_ListFeeds = other.m_ListFeeds;
 		_Mouse = other._Mouse;
 		V = other.V;		
 		Timer = other.Timer;
@@ -32,12 +32,7 @@ namespace Server
 		f->setV(Dir * 0.5f);
 		f->setParentCenter(obj.getCenter());
 		f->setParentRadius(obj.getRadius());
-		listFeeds.push_back(f);
-	}
-
-	list<shared_ptr<Feed>>& Hero::getListFeeds()
-	{
-		return listFeeds;
+		m_ListFeeds.push_back(f);
 	}
 
 	void Hero::setFeeded()

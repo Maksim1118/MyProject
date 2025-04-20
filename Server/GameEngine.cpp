@@ -42,7 +42,7 @@ namespace Server
 		}
 	}
 
-	GameEngine::GameEngine() : hero("myHero")
+	GameEngine::GameEngine() : hero(m_ListFeeds, "myHero")
 	{
 		_GameOver = false;
 		srand(time(NULL));
@@ -70,9 +70,55 @@ namespace Server
 		}
 	}
 
+	nlohmann::json GameEngine::getInformationHero(Hero& hero)
+	{
+		nlohmann::json Hero;
+		auto heroCol = static_cast<int>(hero.colB);
+		Hero["id"] = hero.getID();
+		Hero["Center"] = { {"x", hero.getCenter().x},{ "y", hero.getCenter().y} };
+		Hero["Radius"] = hero.getRadius();
+		Hero["Color"] = heroCol;
+		Hero["Name"] = hero.getName();
+		Hero["Splitted"] = hero.isSplitted();
+		Hero["Feeded"] = hero.isFeeded();
+		Hero["Mass"] = hero.getMass();
+		Hero["GameOver"] = _GameOver;
+		Hero["Speed"]["x"] = hero.getSpeed().x;
+		Hero["Speed"]["y"] = hero.getSpeed().y;
+		Hero["State"] = static_cast<int>(hero.state);
+
+		if (Hero["Splitted"] == true)
+		{
+			nlohmann::json HeroPieceArray = nlohmann::json::array();
+			for (auto& p : hero.pieces)
+			{
+				nlohmann::json Piece;
+				Piece["id"] = p->getID();
+				Piece["Center"] = { {"x", p->getCenter().x},{ "y", p->getCenter().y} };
+				Piece["Radius"] = p->getRadius();
+				Piece["Color"] = heroCol;
+				Piece["Speed"]["x"] = p->getSpeed().x;
+				Piece["Speed"]["y"] = p->getSpeed().y;
+				Piece["maxV"] = p->getMaxV();
+
+				HeroPieceArray.push_back(Piece);
+			}
+			Hero["Pieces"] = HeroPieceArray;
+		}
+		return Hero;
+	}
+
+
+
 	nlohmann::json GameEngine::process(nlohmann::json request)
 	{
 		nlohmann::json response;
+		if (request.contains("action") && request["action"] == "create Hero")
+		{
+
+			response["Hero"] = getInformationHero(hero);
+			response["status"] = "OK";
+		}
 		if (request.contains("action") && request["action"] == "split")
 		{
 			hero.setSplite();
@@ -134,41 +180,11 @@ namespace Server
 			}
 			response["listBot"] = BotsArray;
 
-			nlohmann::json Hero;
-			auto heroCol = static_cast<int>(hero.colB);
-			Hero["id"] = hero.getID();
-			Hero["Center"] = { {"x", hero.getCenter().x},{ "y", hero.getCenter().y} };
-			Hero["Radius"] = hero.getRadius();
-			Hero["Color"] = heroCol;
-			Hero["Name"] = hero.getName();
-			Hero["Splitted"] = hero.isSplitted();
-			Hero["Feeded"] = hero.isFeeded();
-			Hero["Mass"] = hero.getMass();
-			Hero["GameOver"] = _GameOver;
-			Hero["Speed"]["x"] = hero.getSpeed().x;
-			Hero["Speed"]["y"] = hero.getSpeed().y;
-			Hero["State"] = static_cast<int>(hero.state);
+			response["Hero"] = getInformationHero(hero);
 
-			if (Hero["Splitted"] == true)
-			{
-				nlohmann::json HeroPieceArray = nlohmann::json::array();
-				for (auto& p : hero.pieces)
-				{
-					nlohmann::json Piece;
-					Piece["id"] = p->getID();
-					Piece["Center"] = { {"x", p->getCenter().x},{ "y", p->getCenter().y} };
-					Piece["Radius"] = p->getRadius();
-					Piece["Color"] = heroCol;
-					Piece["Speed"]["x"] = p->getSpeed().x;
-					Piece["Speed"]["y"] = p->getSpeed().y;
-					Piece["maxV"] = p->getMaxV();
 
-					HeroPieceArray.push_back(Piece);
-				}
-				Hero["Pieces"] = HeroPieceArray;
-			}
 			nlohmann::json FeedArray = nlohmann::json::array();
-			for (const auto& f : hero.getListFeeds())
+			for (const auto& f : m_ListFeeds)
 			{
 				nlohmann::json Feed;
 				Feed["Center"] = { {"x", f->getCenter().x},{ "y", f->getCenter().y} };
@@ -177,19 +193,12 @@ namespace Server
 				Feed["state"] = static_cast<int>(f->state);
 				Feed["Speed"]["x"] = f->getSpeed().x;
 				Feed["Speed"]["y"] = f->getSpeed().y;
-				cout << "ENGINE" << endl;
-				cout << "FeedSpeed: " << Feed["Speed"]["x"] << "    " << Feed["Speed"]["y"] << endl;
-				cout << "FeedCoords: " << Feed["Center"]["x"] << "    " << Feed["Center"]["y"] << endl;
-				cout << "heroCenterX: " << Hero["Center"]["x"] << "   " << "heroCenterY: " << Hero["Center"]["y"] << endl << endl << endl;
 
 				FeedArray.push_back(Feed);
 			}
-			Hero["Feeds"] = FeedArray;
-			/*if (Hero["Feeded"] == true)
-			{
-				
-			}*/
-			response["Hero"] = Hero;
+			response["listFeed"] = FeedArray;
+
+			/*response["Hero"] = Hero;*/
 
 			nlohmann::json FoodArray = nlohmann::json::array();
 			for (auto& f : _Food)
@@ -252,7 +261,7 @@ namespace Server
 		checkStatus(_Food, diff);
 	
 		cout << "begin" << "   ";
-		checkStatus(hero.getListFeeds(), diff);
+		checkStatus(m_ListFeeds, diff);
 		cout << "   " << "end";
 		checkStatus(_ThornSprite, diff);
 
@@ -272,12 +281,12 @@ namespace Server
 			}
 		}
 
-		for (auto& i = hero.getListFeeds().begin(); i != hero.getListFeeds().end(); ++i)
+		for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
 		{
 			hero.Eat((*i).get());
 		}
 
-		for (auto& i = hero.getListFeeds().begin(); i != hero.getListFeeds().end(); ++i)
+		for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
 		{
 			for (auto j = bots.begin(); j != bots.end(); j++)
 			{
@@ -356,7 +365,7 @@ namespace Server
 		if (isCollWithMap(hero.getCenter()))
 			hero.setCenter(getCoorCollWithMap(hero.getCenter()));
 
-		for (auto& f : hero.getListFeeds())
+		for (auto& f : m_ListFeeds)
 		{
 			if (isCollWithMap(f->getCenter()))
 				f->setCenter(getCoorCollWithMap(f->getCenter()));
