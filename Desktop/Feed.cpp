@@ -9,7 +9,6 @@ Feed::Feed(Vector2f center, float radius, int id) : MoveObject(center, radius, i
 
 void Feed::TimeElapsed(int diff)
 {
-	/*if (GetLen(V) != 0.f)*/
 	float lenV = GetLen(V);
 	float newlenV = lenV - 0.0005f * (float)diff;
 	if (newlenV <= 0)
@@ -22,20 +21,6 @@ void Feed::TimeElapsed(int diff)
 
 	}
 	MoveObject::TimeElapsed(diff);
-	/*if (GetLen(parentCenter, getCenter()) > parentRadius)
-	{
-		float lenV = GetLen(V);
-		float newlenV = lenV - 0.001f * diff;
-		if (newlenV <= 0)
-		{
-			V = { 0,0 };
-		}
-		else
-		{
-			V *= newlenV / lenV;
-
-		}
-	}*/
 }
 
 void Feed::draw(RenderWindow& window)

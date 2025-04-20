@@ -4,13 +4,12 @@
 #include "Message.h"
 #include "Feed.h"
 
-//#include "BaseOld.h"
 #include <thread>
 #include <mutex>
 #include <ctime>
 #include<iostream>
 #include <chrono>
-//bool SettingScene::_isKeySpliteChanged = false;
+
 int Options::SplitedKeyCode;
 extern bool thornEeaten;
 mutex m;
@@ -131,10 +130,6 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 							return o->getID() == FeedId;
 						});
 					shared_ptr<Feed> feed;
-				/*	cout << "FeedId: " << FeedId << endl;
-					cout << "FeedSpeed: " << f["Speed"]["x"] << "    " << f["Speed"]["y"] << endl;
-					cout << "FeedCoords: " << f["Center"]["x"] << "    " << f["Center"]["y"] << endl;
-					cout << "heroCenterX: " << obj["Center"]["x"] << "   " << "heroCenterY: " << obj["Center"]["y"] << endl;*/
 					if (itFeed == objects.end())
 					{
 						feed = make_shared<Feed>(Vector2f(f["Center"]["x"], f["Center"]["y"]), f["Radius"], f["id"]);
