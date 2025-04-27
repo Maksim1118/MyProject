@@ -23,6 +23,13 @@ namespace Server
 		return *this;
 	}
 
+	void Hero::TimeElapsed(int diff)
+	{
+		if (state == States::EATEN)
+			return;
+		Bot::TimeElapsed(diff);
+	}
+
 	void Hero::createFeed(Objects& obj)
 	{
 		shared_ptr<Feed> f = make_shared<Feed>();

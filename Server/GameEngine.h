@@ -28,7 +28,7 @@ namespace  Server
 		list<shared_ptr<Thorn>> _ThornSprite{};
 		list<shared_ptr<Food>> _Food{};
 
-		Hero hero;
+		list<shared_ptr<Hero>> heroes;
 		list<shared_ptr<Bot>> bots{};
 	private:
 		list<shared_ptr<Feed>> m_ListFeeds;

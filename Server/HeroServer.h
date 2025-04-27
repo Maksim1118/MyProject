@@ -20,6 +20,7 @@ namespace Server
 		Hero& operator =(const Hero&);
 		void setFeeded();
 		bool isFeeded();
+		void TimeElapsed(int diff)override;
 	private:
 		list<shared_ptr<Feed>> &m_ListFeeds;
 		bool Feeded;

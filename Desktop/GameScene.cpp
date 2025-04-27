@@ -42,112 +42,90 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 		else
 		{
 			lock_guard lock(m);
-			if (response.contains("Hero"))
+			if (response.contains("ListHeroes"))
 			{
-				getInformationHero(response["Hero"], tempObjects, tempHeroPieces, GameOver, objects, HeroMass, _hero);
-				/*auto obj = response["Hero"];
-				GameOver = obj["GameOver"];
-				int heroId = static_cast<int>(obj["id"]);
-				auto itHero = find_if(objects.begin(), objects.end(), [heroId](const shared_ptr<Objects>& o)
-					{
-						return o->getID() == heroId;
-					});
-				shared_ptr<Hero> hero;
-				int massHero = static_cast<int>(obj["Mass"]);
-				HeroMass.setString("mass Hero: " + to_string(massHero));
-				if (itHero == objects.end())
+				for (auto& hero : response["ListHeroes"])
 				{
-					hero = make_shared<Hero>(Vector2f(obj["Center"]["x"], obj["Center"]["y"]), obj["Radius"], obj["Color"], obj["Name"], obj["id"]);
-					_hero = hero;
-					hero->isSplitted(obj["Splitted"]);
-					float SpeedX = obj["Speed"]["x"];
-					float SpeedY = obj["Speed"]["y"];
-					hero->setSpeed(Vector2f(SpeedX, SpeedY));
-					tempObjects.push_back(hero);
-				}
-				else
-				{
-					hero = dynamic_pointer_cast<Hero>(*itHero);
-					if (hero)
+					int HeroId = static_cast<int>(hero["id"]);
+
+					if (_hero != nullptr && HeroId == _hero->getID())
 					{
-						hero->isSplitted(obj["Splitted"]);
-						hero->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
-						hero->setRadius(obj["Radius"]);
-						hero->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - itHero->get()->getCenter());
-						tempObjects.push_back(hero);
-					}
-				}
-				if (obj["Splitted"] == true)
-				{
-					
-					for (auto& p : obj["Pieces"])
-					{
-						int pieceId = static_cast<int>(p["id"]);
-						auto itPiece = find_if(objects.begin(), objects.end(), [pieceId](const shared_ptr<Objects>& o)
-							{
-								return o->getID() == pieceId;
-							});
-						shared_ptr<Piece> piece;
-						if (itPiece == objects.end())
-						{
-							piece = make_shared<Piece>(Vector2f(p["Center"]["x"], p["Center"]["y"]), p["Radius"], p["Color"], p["id"]);
-							piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
-							piece->setMaxV(p["maxV"]);
-							tempHeroPieces.push_back(piece);
-							tempObjects.push_back(piece);
-						}
-						else
-						{
-							piece = dynamic_pointer_cast<Piece>(*itPiece);
-							if (piece)
-							{
-								piece->setMaxV(p["maxV"]);
-								piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
-								piece->setRadius(p["Radius"]);
-								auto it = find_if(hero->pieces.begin(), hero->pieces.end(), [piece](const shared_ptr<Piece>& pTemp)
-									{
-										return pTemp->getID() == piece->getID();
-									});
-								if (it != hero->pieces.end())
-								{
-									piece->setDifference(Vector2f(p["Center"]["x"], p["Center"]["y"]) - it->get()->getCenter());
-								}
-								tempObjects.push_back(piece);
-								tempHeroPieces.push_back(piece);
-							}
-							
-						}
-					}
-					hero->pieces = tempHeroPieces;
-					tempHeroPieces.clear();
-				}*/
-				/*for (const auto& f : obj["Feeds"])
-				{
-					if (f["state"] != 0)
-						continue;
-					int FeedId = static_cast<int>(f["id"]);
-					auto itFeed = find_if(objects.begin(), objects.end(), [FeedId](const shared_ptr<Objects>& o)
-						{
-							return o->getID() == FeedId;
-						});
-					shared_ptr<Feed> feed;
-					if (itFeed == objects.end())
-					{
-						feed = make_shared<Feed>(Vector2f(f["Center"]["x"], f["Center"]["y"]), f["Radius"], f["id"]);
-						feed->setSpeed(Vector2f(f["Speed"]["x"], f["Speed"]["y"]));
-						tempObjects.push_back(feed);
+						getInformationHero(hero, tempObjects, tempHeroPieces, GameOver, objects, HeroMass, _hero);
 					}
 					else
 					{
-						feed = dynamic_pointer_cast<Feed>(*itFeed);
-						if (feed)
+						if (hero["State"] != 0)
+							continue;
+						auto itHero = find_if(objects.begin(), objects.end(), [HeroId](const shared_ptr<Objects>& o)
+							{
+								return o->getID() == HeroId;
+							});
+						shared_ptr<Hero> _Hero;
+						if (itHero == objects.end())
 						{
-							feed->setSpeed(Vector2f(f["Speed"]["x"], f["Speed"]["y"]));
-							feed->setDifference(Vector2f(f["Center"]["x"], f["Center"]["y"]) - itFeed->get()->getCenter());
-							tempObjects.push_back(feed);
+							_Hero = make_shared<Hero>(Vector2f(hero["Center"]["x"], hero["Center"]["y"]), hero["Radius"], hero["Color"], hero["Name"], hero["id"]);
+							_Hero->isSplitted(hero["Splitted"]);
+							_Hero->setSpeed(Vector2f(hero["Speed"]["x"], hero["Speed"]["y"]));
+							tempObjects.push_back(_Hero);
 						}
+						else
+						{
+							_Hero = dynamic_pointer_cast<Hero>(*itHero);
+							if (_Hero)
+							{
+								_Hero->isSplitted(hero["Splitted"]);
+								_Hero->setSpeed(Vector2f(hero["Speed"]["x"], hero["Speed"]["y"]));
+								_Hero->setRadius(hero["Radius"]);
+								_Hero->setDifference(Vector2f(hero["Center"]["x"], hero["Center"]["y"]) - _Hero->getCenter());
+								tempObjects.push_back(_Hero);
+							}
+						}
+						if (hero["Splitted"] == true)
+						{
+							for (auto& p : hero["Pieces"])
+							{
+								int pieceId = static_cast<int>(p["id"]);
+								auto itPiece = find_if(objects.begin(), objects.end(), [pieceId](const shared_ptr<Objects>& o)
+									{
+										return o->getID() == pieceId;
+									});
+								shared_ptr<Piece> piece;
+								if (itPiece == objects.end())
+								{
+									piece = make_shared<Piece>(Vector2f(p["Center"]["x"], p["Center"]["y"]), p["Radius"], p["Color"], p["id"]);
+									piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
+									piece->setMaxV(p["maxV"]);
+									tempBotPieces.push_back(piece);
+									tempObjects.push_back(piece);
+								}
+								else
+								{
+									piece = dynamic_pointer_cast<Piece>(*itPiece);
+									if (piece)
+									{
+										piece->setMaxV(p["maxV"]);
+										piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
+										piece->setRadius(p["Radius"]);
+										auto it = find_if(_Hero->pieces.begin(), _Hero->pieces.end(), [piece](const shared_ptr<Piece>& pTemp)
+											{
+												return pTemp->getID() == piece->getID();
+											});
+										if (it != _Hero->pieces.end())
+										{
+											piece->setDifference(Vector2f(p["Center"]["x"], p["Center"]["y"]) - it->get()->getCenter());
+										}
+										tempObjects.push_back(piece);
+										tempBotPieces.push_back(piece);
+									}
+								}
+							}
+							_Hero->pieces = tempBotPieces;
+							tempBotPieces.clear();
+						}
+					
 					}
-				}*/
+				}
+				
 			}
 				
 			if (response.contains("listFood"))
@@ -400,11 +378,14 @@ void GameScene::TimeElapsed(int& diff)
 	timer += diff;
 	if (timer > 100)
 	{
-		nlohmann::json request;
-		request["action"] = "ask pos mouse";
-		request["Id"] = _hero.get()->getID();
-		request["mousePosition"] = { {"x",posMouse.x}, {"y", posMouse.y} };
-		nlohmann::json response = message.process(request);
+		if (_hero != nullptr)
+		{
+			nlohmann::json request;
+			request["action"] = "ask pos mouse";
+			request["Id"] = _hero.get()->getID();
+			request["mousePosition"] = { {"x",posMouse.x}, {"y", posMouse.y} };
+			nlohmann::json response = message.process(request);
+		}
 	}
 	lock_guard lock(m);
 	for (const auto& o : objects)
@@ -435,7 +416,7 @@ Vector2f GameScene::getCoorCollCameraWithMap(Vector2f& pos, float Width, float H
 void GameScene::setActive()
 {
 	nlohmann::json request;
-	request["action"] = "create Player";
+	request["action"] = "create Hero";
 	nlohmann::json response = message.process(request);
 	if (response["status"] == "OK")
 	{

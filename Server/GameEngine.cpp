@@ -42,7 +42,7 @@ namespace Server
 		}
 	}
 
-	GameEngine::GameEngine() : hero(m_ListFeeds, "myHero")
+	GameEngine::GameEngine()
 	{
 		_GameOver = false;
 		srand(time(NULL));
@@ -51,7 +51,6 @@ namespace Server
 		fillList(_ThornSprite, ThornSpriteSize, "");
 		fillList(_Food, ArrFoodSize, "");
 
-		shift(&hero);
 
 		spawnList(bots);
 		spawnList(_ThornSprite);
@@ -115,35 +114,39 @@ namespace Server
 		nlohmann::json response;
 		if (request.contains("action") && request["action"] == "create Hero")
 		{
+			shared_ptr<Hero> hero = make_shared<Hero>(m_ListFeeds, "myHero");
+			shift(hero.get());
+			response["Hero"] = getInformationHero(*hero);
+			heroes.emplace_back(hero);
 
-			response["Hero"] = getInformationHero(hero);
 			
 			response["status"] = "OK";
 		}
-		if (request.contains("action") && request["action"] == "split")
+		else if (request.contains("action") && request["action"] == "split")
 		{
 			int id = request["Id"];
-			if (hero.getID() == id)
+			for (const auto& hero : heroes)
 			{
-				hero.setSplite();
-				response["status"] = "OK";
+				if (id == hero->getID())
+				{
+					hero->setSplite();
+					response["status"] = "OK";
+					break;
+				}
 			}
-			else
-			{
-				response["status"] = "ERROR";
-			}
+			
 		}
 		else if (request.contains("action") && request["action"] == "feed")
 		{
 			int id = request["Id"];
-			if (hero.getID() == id)
+			for (const auto& hero : heroes)
 			{
-				hero.setFeeded();
-				response["status"] = "OK";
-			}
-			else
-			{
-				response["status"] = "ERROR";
+				if (id == hero->getID())
+				{
+					hero->setFeeded();
+					response["status"] = "OK";
+					break;
+				}
 			}
 		}
 		/*else if (request.contains("action") && request["action"] == "get mass")
@@ -162,16 +165,16 @@ namespace Server
 		else if (request.contains("action") && request["action"] == "ask pos mouse")
 		{
 			int id = request["Id"];
-			if (hero.getID() == id)
+			for (const auto& hero : heroes)
 			{
-				float x = request["mousePosition"]["x"];
-				float y = request["mousePosition"]["y"];
-				hero.setPosMouse(x, y);
-				response["status"] = "OK";
-			}
-			else
-			{
-				response["status"] = "ERROR";
+				if (id == hero->getID())
+				{
+					float x = request["mousePosition"]["x"];
+					float y = request["mousePosition"]["y"];
+					hero->setPosMouse(x, y);
+					response["status"] = "OK";
+					break;
+				}
 			}
 		}
 		else if (request.contains("action") && request["action"] == "get object")
@@ -214,7 +217,14 @@ namespace Server
 			}
 			response["listBot"] = BotsArray;
 
-			response["Hero"] = getInformationHero(hero);
+
+			nlohmann::json HeroesArray = nlohmann::json::array();
+			for (auto& hero : heroes)
+			{
+				nlohmann::json Hero = getInformationHero(*hero);
+				HeroesArray.emplace_back(Hero);
+			}
+			response["ListHeroes"] = HeroesArray;
 
 
 			nlohmann::json FeedArray = nlohmann::json::array();
@@ -287,10 +297,12 @@ namespace Server
 
 	void GameEngine::TimeElapsed(int& diff)
 	{
-		if (hero.state == States::EATEN)
+
+		/*if (hero.state == States::EATEN)
 			_GameOver = true;
 		if (!_GameOver)
-			hero.TimeElapsed(diff);
+			hero.TimeElapsed(diff);*/
+		checkStatus(heroes, diff);
 		checkStatus(bots, diff);
 		checkStatus(_Food, diff);
 	
@@ -304,7 +316,10 @@ namespace Server
 		
 		for (auto& i = _Food.begin(); i != _Food.end(); ++i)
 		{
-			hero.Eat((*i).get());
+			for (auto j = heroes.begin(); j != heroes.end(); j++)
+			{
+				(*j)->Eat((*i).get());
+			}
 		}
 
 		for (auto& i = _Food.begin(); i != _Food.end(); ++i)
@@ -317,7 +332,10 @@ namespace Server
 
 		for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
 		{
-			hero.Eat((*i).get());
+			for (auto j = heroes.begin(); j != heroes.end(); j++)
+			{
+				(*j)->Eat((*i).get());
+			}
 		}
 
 		for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
@@ -330,7 +348,10 @@ namespace Server
 
 		for (auto& i = _ThornSprite.begin(); i != _ThornSprite.end(); ++i)
 		{
-			hero.Eat((*i).get());
+			for (auto j = heroes.begin(); j != heroes.end(); j++)
+			{
+				(*j)->Eat((*i).get());
+			}
 		}
 
 		for (auto& i = _ThornSprite.begin(); i != _ThornSprite.end(); ++i)
@@ -354,13 +375,13 @@ namespace Server
 			}
 		}
 
-		if (!_GameOver)
+		for (auto& b : bots)
 		{
-			for (auto& b : bots)
+			for (auto& hero : heroes)
 			{
-				b->Eat(&hero);
-				hero.Eat(b.get());
-			}		
+				b->Eat(hero.get());
+				hero->Eat(b.get());
+			}
 		}
 	}
 
@@ -396,8 +417,17 @@ namespace Server
 
 	void GameEngine::allObjectsCollWithMap()
 	{
-		if (isCollWithMap(hero.getCenter()))
-			hero.setCenter(getCoorCollWithMap(hero.getCenter()));
+		for (auto& hero : heroes)
+		{
+			if (isCollWithMap(hero->getCenter()))
+				hero->setCenter(getCoorCollWithMap(hero->getCenter()));
+
+			for (auto& Piece : hero->pieces)
+			{
+				if (isCollWithMap(Piece->getCenter()))
+					Piece->setCenter(getCoorCollWithMap(Piece->getCenter()));
+			}
+		}
 
 		for (auto& f : m_ListFeeds)
 		{
@@ -408,11 +438,6 @@ namespace Server
 		{
 			if (isCollWithMap(b->getCenter()))
 				b->setCenter(getCoorCollWithMap(b->getCenter()));
-		}
-		for (auto& Piece : hero.pieces)
-		{
-			if (isCollWithMap(Piece->getCenter()))
-				Piece->setCenter(getCoorCollWithMap(Piece->getCenter()));
 		}
 	}
 
@@ -498,7 +523,7 @@ namespace Server
 
 	bool GameEngine::checkAllCollision(Objects& obj)
 	{
-		return (obj.isCollision(hero, 2) || checkCollision(&obj, bots) || checkCollision(&obj, _ThornSprite) || checkCollision(&obj, _Food));
+		return (checkCollision(&obj, heroes)|| checkCollision(&obj, bots) || checkCollision(&obj, _ThornSprite) || checkCollision(&obj, _Food));
 
 	}
 }
