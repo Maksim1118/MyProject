@@ -30,4 +30,5 @@ void SceneManager::SetMainScene()
 void SceneManager::SetGameScene()
 {
 	_current = _GameScene;	
+	_current->setActive();
 }

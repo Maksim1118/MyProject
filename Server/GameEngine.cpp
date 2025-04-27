@@ -117,28 +117,62 @@ namespace Server
 		{
 
 			response["Hero"] = getInformationHero(hero);
+			
 			response["status"] = "OK";
 		}
 		if (request.contains("action") && request["action"] == "split")
 		{
-			hero.setSplite();
-			response["status"] = "OK";
+			int id = request["Id"];
+			if (hero.getID() == id)
+			{
+				hero.setSplite();
+				response["status"] = "OK";
+			}
+			else
+			{
+				response["status"] = "ERROR";
+			}
 		}
 		else if (request.contains("action") && request["action"] == "feed")
 		{
-			hero.setFeeded();
-			response["status"] = "OK";
+			int id = request["Id"];
+			if (hero.getID() == id)
+			{
+				hero.setFeeded();
+				response["status"] = "OK";
+			}
+			else
+			{
+				response["status"] = "ERROR";
+			}
 		}
-		else if (request.contains("action") && request["action"] == "get mass")
+		/*else if (request.contains("action") && request["action"] == "get mass")
 		{
-			response["massHero"] = hero.getMass();
-		}
+			int id = request["Id"];
+			if (hero.getID() == id)
+			{
+				response["massHero"] = hero.getMass();
+				response["status"] = "OK";
+			}
+			else
+			{
+				response["status"] = "ERROR";
+			}
+		}*/
 		else if (request.contains("action") && request["action"] == "ask pos mouse")
 		{
-			float x = request["mousePosition"]["x"];
-			float y = request["mousePosition"]["y"];
-			hero.setPosMouse(x, y);
-			response["status"] = "OK";
+			int id = request["Id"];
+			if (hero.getID() == id)
+			{
+				float x = request["mousePosition"]["x"];
+				float y = request["mousePosition"]["y"];
+				hero.setPosMouse(x, y);
+				response["status"] = "OK";
+			}
+			else
+			{
+				response["status"] = "ERROR";
+			}
 		}
 		else if (request.contains("action") && request["action"] == "get object")
 		{

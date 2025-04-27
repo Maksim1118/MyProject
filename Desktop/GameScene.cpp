@@ -20,6 +20,7 @@ constexpr float minMassForScale = 400.00f;
 constexpr float maxScale = 1.00f;
 constexpr float minScale = 2.00f;
 
+void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>>& tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, Text& HeroMass, shared_ptr<Hero>& _hero);
 
 void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& GameOver, float & scale, Vector2f & CameraPos, shared_ptr<Hero>& _hero)
 {
@@ -28,7 +29,7 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 	bool thornCreated = false;
 	list<shared_ptr<Piece>> tempHeroPieces;
 	list<shared_ptr<Piece>> tempBotPieces;
-	vector<shared_ptr<Objects>> tempObjects;
+	vector<shared_ptr<Objects>> tempObjects; 
 	while (true)
 	{
 		nlohmann::json listObjects;
@@ -43,8 +44,8 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 			lock_guard lock(m);
 			if (response.contains("Hero"))
 			{
-				
-				auto obj = response["Hero"];
+				getInformationHero(response["Hero"], tempObjects, tempHeroPieces, GameOver, objects, HeroMass, _hero);
+				/*auto obj = response["Hero"];
 				GameOver = obj["GameOver"];
 				int heroId = static_cast<int>(obj["id"]);
 				auto itHero = find_if(objects.begin(), objects.end(), [heroId](const shared_ptr<Objects>& o)
@@ -119,7 +120,7 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 					}
 					hero->pieces = tempHeroPieces;
 					tempHeroPieces.clear();
-				}
+				}*/
 				/*for (const auto& f : obj["Feeds"])
 				{
 					if (f["state"] != 0)
@@ -372,12 +373,15 @@ void GameScene::HandleEvent(Event& event, Vector2f& mousePos)
 		if (event.key.code == Options::SplitedKeyCode)	
 		{
 			request["action"] = "split";
+			request["Id"] = _hero.get()->getID();
 			nlohmann::json response = message.process(request);
+
 			
 		}
 		if (event.key.code == Options::FeededKeyCode)
 		{		
 			request["action"] = "feed";
+			request["Id"] = _hero.get()->getID();
 			nlohmann::json response = message.process(request);
 		}
 	}
@@ -398,6 +402,7 @@ void GameScene::TimeElapsed(int& diff)
 	{
 		nlohmann::json request;
 		request["action"] = "ask pos mouse";
+		request["Id"] = _hero.get()->getID();
 		request["mousePosition"] = { {"x",posMouse.x}, {"y", posMouse.y} };
 		nlohmann::json response = message.process(request);
 	}
@@ -425,6 +430,102 @@ Vector2f GameScene::getCoorCollCameraWithMap(Vector2f& pos, float Width, float H
 		pos.x = fieldWidth - Width, pos.y;
 	}
 	return pos;
+}
+
+void GameScene::setActive()
+{
+	nlohmann::json request;
+	request["action"] = "create Player";
+	nlohmann::json response = message.process(request);
+	if (response["status"] == "OK")
+	{
+		if (response.contains("Hero"))
+		{
+			list<shared_ptr<Piece>> tempHeroPieces;
+			vector<shared_ptr<Objects>> tempObjects;
+			getInformationHero(response["Hero"], tempObjects, tempHeroPieces, _GameOver, objects, HeroMass, _hero);
+		}
+	}
+	
+}
+
+void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, Text& HeroMass, shared_ptr<Hero>& _hero)
+{
+	GameOver = obj["GameOver"];
+	int heroId = static_cast<int>(obj["id"]);
+	auto itHero = find_if(objects.begin(), objects.end(), [heroId](const shared_ptr<Objects>& o)
+		{
+			return o->getID() == heroId;
+		});
+	shared_ptr<Hero> hero;
+	int massHero = static_cast<int>(obj["Mass"]);
+	HeroMass.setString("mass Hero: " + to_string(massHero));
+	if (itHero == objects.end())
+	{
+		hero = make_shared<Hero>(Vector2f(obj["Center"]["x"], obj["Center"]["y"]), obj["Radius"], obj["Color"], obj["Name"], obj["id"]);
+		_hero = hero;
+		hero->isSplitted(obj["Splitted"]);
+		float SpeedX = obj["Speed"]["x"];
+		float SpeedY = obj["Speed"]["y"];
+		hero->setSpeed(Vector2f(SpeedX, SpeedY));
+		tempObjects.push_back(hero);
+	}
+	else
+	{
+		hero = dynamic_pointer_cast<Hero>(*itHero);
+		if (hero)
+		{
+			hero->isSplitted(obj["Splitted"]);
+			hero->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
+			hero->setRadius(obj["Radius"]);
+			hero->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - itHero->get()->getCenter());
+			tempObjects.push_back(hero);
+		}
+	}
+	if (obj["Splitted"] == true)
+	{
+
+		for (auto& p : obj["Pieces"])
+		{
+			int pieceId = static_cast<int>(p["id"]);
+			auto itPiece = find_if(objects.begin(), objects.end(), [pieceId](const shared_ptr<Objects>& o)
+				{
+					return o->getID() == pieceId;
+				});
+			shared_ptr<Piece> piece;
+			if (itPiece == objects.end())
+			{
+				piece = make_shared<Piece>(Vector2f(p["Center"]["x"], p["Center"]["y"]), p["Radius"], p["Color"], p["id"]);
+				piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
+				piece->setMaxV(p["maxV"]);
+				tempHeroPieces.push_back(piece);
+				tempObjects.push_back(piece);
+			}
+			else
+			{
+				piece = dynamic_pointer_cast<Piece>(*itPiece);
+				if (piece)
+				{
+					piece->setMaxV(p["maxV"]);
+					piece->setSpeed(Vector2f(p["Speed"]["x"], p["Speed"]["y"]));
+					piece->setRadius(p["Radius"]);
+					auto it = find_if(hero->pieces.begin(), hero->pieces.end(), [piece](const shared_ptr<Piece>& pTemp)
+						{
+							return pTemp->getID() == piece->getID();
+						});
+					if (it != hero->pieces.end())
+					{
+						piece->setDifference(Vector2f(p["Center"]["x"], p["Center"]["y"]) - it->get()->getCenter());
+					}
+					tempObjects.push_back(piece);
+					tempHeroPieces.push_back(piece);
+				}
+
+			}
+		}
+		hero->pieces = tempHeroPieces;
+		tempHeroPieces.clear();
+	}
 }
 
 void GameScene::draw(RenderWindow& window)

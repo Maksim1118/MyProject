@@ -11,6 +11,7 @@ constexpr int ArrFoodSize = 500;
 constexpr int SetPosFood = 1190;
 constexpr int SetPosThorn = 1100;
 class SceneManager;
+
 class GameScene : public Scene
 {
 public:
@@ -21,6 +22,7 @@ public:
 	Vector2f getCoorCollWithMap(const Vector2f& pos);
 	virtual void TimeElapsed(int& diff);
 	Vector2f getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height);
+	void setActive() override;
 	
 private:
 	SceneManager *_manager= nullptr;
