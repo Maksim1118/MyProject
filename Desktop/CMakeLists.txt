@@ -28,7 +28,7 @@ SettingScene.cpp
 Thorn.cpp
 ResourceManager.cpp
 Message.cpp
-Bot.cpp "Piece.h" "Piece.cpp" "Feed.cpp" "Feed.h" "MoveObject.h" "MoveObject.cpp")
+Bot.cpp "Piece.h" "Piece.cpp" "Feed.cpp" "Feed.h" "MoveObject.h" "MoveObject.cpp" "JsonParser.cpp")
 
 target_link_libraries(Desktop PRIVATE BaseFunctionLib)
 target_compile_features(Desktop PRIVATE cxx_std_17)

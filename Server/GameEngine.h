@@ -32,7 +32,10 @@ namespace  Server
 		list<shared_ptr<Bot>> bots{};
 	private:
 		list<shared_ptr<Feed>> m_ListFeeds;
-		nlohmann::json getInformationHero(Hero& hero);
+		nlohmann::json HeroToJson(Hero& hero);
+		nlohmann::json BotToJson(Bot& bot);
+		nlohmann::json PieceToJson(Piece& piece, int colorIndex);
+
 		template<typename T> void shift(T* ptrObj);
 		template<typename T> void fillList(list<shared_ptr<T>>& list, size_t size, string str);
 		void allObjectsCollWithMap();

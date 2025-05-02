@@ -69,7 +69,7 @@ namespace Server
 		}
 	}
 
-	nlohmann::json GameEngine::getInformationHero(Hero& hero)
+	nlohmann::json GameEngine::HeroToJson(Hero& hero)
 	{
 		nlohmann::json Hero;
 		auto heroCol = static_cast<int>(hero.colB);
@@ -85,21 +85,12 @@ namespace Server
 		Hero["Speed"]["x"] = hero.getSpeed().x;
 		Hero["Speed"]["y"] = hero.getSpeed().y;
 		Hero["State"] = static_cast<int>(hero.state);
-
 		if (Hero["Splitted"] == true)
 		{
 			nlohmann::json HeroPieceArray = nlohmann::json::array();
 			for (auto& p : hero.pieces)
 			{
-				nlohmann::json Piece;
-				Piece["id"] = p->getID();
-				Piece["Center"] = { {"x", p->getCenter().x},{ "y", p->getCenter().y} };
-				Piece["Radius"] = p->getRadius();
-				Piece["Color"] = heroCol;
-				Piece["Speed"]["x"] = p->getSpeed().x;
-				Piece["Speed"]["y"] = p->getSpeed().y;
-				Piece["maxV"] = p->getMaxV();
-
+				nlohmann::json Piece = PieceToJson(*p, heroCol);
 				HeroPieceArray.push_back(Piece);
 			}
 			Hero["Pieces"] = HeroPieceArray;
@@ -116,7 +107,7 @@ namespace Server
 		{
 			shared_ptr<Hero> hero = make_shared<Hero>(m_ListFeeds, "myHero");
 			shift(hero.get());
-			response["Hero"] = getInformationHero(*hero);
+			response["Hero"] = HeroToJson(*hero);
 			heroes.emplace_back(hero);
 
 			
@@ -149,19 +140,7 @@ namespace Server
 				}
 			}
 		}
-		/*else if (request.contains("action") && request["action"] == "get mass")
-		{
-			int id = request["Id"];
-			if (hero.getID() == id)
-			{
-				response["massHero"] = hero.getMass();
-				response["status"] = "OK";
-			}
-			else
-			{
-				response["status"] = "ERROR";
-			}
-		}*/
+		
 		else if (request.contains("action") && request["action"] == "ask pos mouse")
 		{
 			int id = request["Id"];
@@ -183,36 +162,8 @@ namespace Server
 			for (auto& b : bots)
 			{
 				auto botCol = static_cast<int>(b->colB);
-				nlohmann::json Bot;
-				Bot["id"] = b->getID();
-				Bot["Center"] = { {"x", b->getCenter().x},{ "y", b->getCenter().y} };
-				Bot["Radius"] = b->getRadius();
-				Bot["Color"] = botCol;
-				Bot["Name"] = b->getName();
-				Bot["Splitted"] = b->isSplitted();
-				Bot["Speed"]["x"] = b->getSpeed().x;
-				Bot["Speed"]["y"] = b->getSpeed().y;
-				Bot["Mouse"]["x"] = b->getMouse().x;
-				Bot["Mouse"]["y"] = b->getMouse().y;
-				Bot["state"] = static_cast<int>(b->state);
-				if (Bot["Splitted"] == true)
-				{
-					nlohmann::json BotPieceArray = nlohmann::json::array();
-					for (auto& p : b->pieces)
-					{
-						nlohmann::json Piece;
-						Piece["id"] = p->getID();
-						Piece["Center"] = { {"x", p->getCenter().x},{ "y", p->getCenter().y} };
-						Piece["Radius"] = p->getRadius();
-						Piece["Color"] = botCol;
-						Piece["Speed"]["x"] = p->getSpeed().x;
-						Piece["Speed"]["y"] = p->getSpeed().y;
-						Piece["maxV"] = p->getMaxV();
 
-						BotPieceArray.push_back(Piece);
-					}
-					Bot["Pieces"] = BotPieceArray;
-				}
+				nlohmann::json Bot = BotToJson(*b);
 				BotsArray.push_back(Bot);
 			}
 			response["listBot"] = BotsArray;
@@ -221,7 +172,7 @@ namespace Server
 			nlohmann::json HeroesArray = nlohmann::json::array();
 			for (auto& hero : heroes)
 			{
-				nlohmann::json Hero = getInformationHero(*hero);
+				nlohmann::json Hero = HeroToJson(*hero);
 				HeroesArray.emplace_back(Hero);
 			}
 			response["ListHeroes"] = HeroesArray;
@@ -242,7 +193,6 @@ namespace Server
 			}
 			response["listFeed"] = FeedArray;
 
-			/*response["Hero"] = Hero;*/
 
 			nlohmann::json FoodArray = nlohmann::json::array();
 			for (auto& f : _Food)
@@ -295,13 +245,13 @@ namespace Server
 			return Vector2f(pos.x, fieldHeight);
 	}
 
+	Vector2f GameEngine::getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height)
+	{
+		return Vector2f();
+	}
+
 	void GameEngine::TimeElapsed(int& diff)
 	{
-
-		/*if (hero.state == States::EATEN)
-			_GameOver = true;
-		if (!_GameOver)
-			hero.TimeElapsed(diff);*/
 		checkStatus(heroes, diff);
 		checkStatus(bots, diff);
 		checkStatus(_Food, diff);
@@ -413,6 +363,47 @@ namespace Server
 				}
 			}
 		}
+	}
+
+	nlohmann::json GameEngine::BotToJson(Bot& bot)
+	{
+		auto botCol = static_cast<int>(bot.colB);
+		nlohmann::json Bot;
+		Bot["id"] = bot.getID();
+		Bot["Center"] = { {"x", bot.getCenter().x},{ "y", bot.getCenter().y} };
+		Bot["Radius"] = bot.getRadius();
+		Bot["Color"] = botCol;
+		Bot["Name"] = bot.getName();
+		Bot["Splitted"] = bot.isSplitted();
+		Bot["Speed"]["x"] = bot.getSpeed().x;
+		Bot["Speed"]["y"] = bot.getSpeed().y;
+		Bot["Mouse"]["x"] = bot.getMouse().x;
+		Bot["Mouse"]["y"] = bot.getMouse().y;
+		Bot["state"] = static_cast<int>(bot.state);
+		if (Bot["Splitted"] == true)
+		{
+			nlohmann::json BotPieceArray = nlohmann::json::array();
+			for (auto& p : bot.pieces)
+			{
+				nlohmann::json Piece = PieceToJson(*p, botCol);
+				BotPieceArray.push_back(Piece);
+			}
+			Bot["Pieces"] = BotPieceArray;
+		}
+		return Bot;
+	}
+
+	nlohmann::json GameEngine::PieceToJson(Piece& piece, int colorIndex)
+	{
+		nlohmann::json Piece;
+		Piece["id"] = piece.getID();
+		Piece["Center"] = { {"x", piece.getCenter().x},{ "y", piece.getCenter().y} };
+		Piece["Radius"] = piece.getRadius();
+		Piece["Color"] = colorIndex;
+		Piece["Speed"]["x"] = piece.getSpeed().x;
+		Piece["Speed"]["y"] = piece.getSpeed().y;
+		Piece["maxV"] = piece.getMaxV();
+		return Piece;
 	}
 
 	void GameEngine::allObjectsCollWithMap()
