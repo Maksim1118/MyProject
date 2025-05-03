@@ -35,6 +35,9 @@ namespace  Server
 		nlohmann::json HeroToJson(Hero& hero);
 		nlohmann::json BotToJson(Bot& bot);
 		nlohmann::json PieceToJson(Piece& piece, int colorIndex);
+		nlohmann::json FoodToJson(Food& food);
+		nlohmann::json FeedToJson(Feed& feed);
+		nlohmann::json ThornToJson(Thorn& thorn);
 
 		template<typename T> void shift(T* ptrObj);
 		template<typename T> void fillList(list<shared_ptr<T>>& list, size_t size, string str);

@@ -29,7 +29,6 @@ private:
 	Sprite fieldBGSprite;
 	bool _GameOver = false;
 	Text text;
-	Text HeroMass;
 	vector<shared_ptr<Objects>> objects;
 	int requestTimeStart = 0;
 	float scale = 1.00f;

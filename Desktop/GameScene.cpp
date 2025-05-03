@@ -20,9 +20,9 @@ constexpr float minMassForScale = 400.00f;
 constexpr float maxScale = 1.00f;
 constexpr float minScale = 2.00f;
 
-void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>>& tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, Text& HeroMass, shared_ptr<Hero>& _hero);
+void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>>& tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, shared_ptr<Hero>& _hero);
 
-void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& GameOver, float & scale, Vector2f & CameraPos, shared_ptr<Hero>& _hero)
+void requestObjects(vector<shared_ptr<Objects>>& objects, bool& GameOver, float & scale, Vector2f & CameraPos, shared_ptr<Hero>& _hero)
 {
 	bool feedsCreated = false;
 	bool foodsCreated = false;
@@ -50,7 +50,7 @@ void requestObjects(vector<shared_ptr<Objects>>& objects, Text& HeroMass, bool& 
 
 					if (_hero != nullptr && HeroId == _hero->getID())
 					{
-						getInformationHero(hero, tempObjects, tempHeroPieces, GameOver, objects, HeroMass, _hero);
+						getInformationHero(hero, tempObjects, tempHeroPieces, GameOver, objects, _hero);
 					}
 					else
 					{
@@ -313,11 +313,6 @@ GameScene::GameScene(SceneManager* manager): _manager(manager), _hero(nullptr)
 	text.setFont(*rec.font);
 	text.setCharacterSize(80);
 	text.setFillColor(Color::Red);
-
-	HeroMass.setFont(*rec.font);
-	HeroMass.setCharacterSize(28);
-	HeroMass.setPosition(20, 50);
-	HeroMass.setFillColor(Color::Black);
 	
 
 	_GameOver = false;
@@ -326,7 +321,7 @@ GameScene::GameScene(SceneManager* manager): _manager(manager), _hero(nullptr)
 	
  	fieldBGSprite.setTexture(*rec.textures[ResourceManager::Textures::FIELD]);
 
-	thread t(requestObjects, ref(objects), ref(HeroMass), ref(_GameOver), ref(scale), ref(CameraPos), ref(_hero));
+	thread t(requestObjects, ref(objects), ref(_GameOver), ref(scale), ref(CameraPos), ref(_hero));
 	t.detach();
 	
 
@@ -424,13 +419,13 @@ void GameScene::setActive()
 		{
 			list<shared_ptr<Piece>> tempHeroPieces;
 			vector<shared_ptr<Objects>> tempObjects;
-			getInformationHero(response["Hero"], tempObjects, tempHeroPieces, _GameOver, objects, HeroMass, _hero);
+			getInformationHero(response["Hero"], tempObjects, tempHeroPieces, _GameOver, objects, _hero);
 		}
 	}
 	
 }
 
-void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, Text& HeroMass, shared_ptr<Hero>& _hero)
+void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempObjects, list<shared_ptr<Piece>>& tempHeroPieces, bool& GameOver, vector<shared_ptr<Objects>>& objects, shared_ptr<Hero>& _hero)
 {
 	GameOver = obj["GameOver"];
 	int heroId = static_cast<int>(obj["id"]);
@@ -439,8 +434,6 @@ void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempO
 			return o->getID() == heroId;
 		});
 	shared_ptr<Hero> hero;
-	int massHero = static_cast<int>(obj["Mass"]);
-	HeroMass.setString("mass Hero: " + to_string(massHero));
 	if (itHero == objects.end())
 	{
 		hero = make_shared<Hero>(Vector2f(obj["Center"]["x"], obj["Center"]["y"]), obj["Radius"], obj["Color"], obj["Name"], obj["id"]);
@@ -448,6 +441,7 @@ void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempO
 		hero->isSplitted(obj["Splitted"]);
 		float SpeedX = obj["Speed"]["x"];
 		float SpeedY = obj["Speed"]["y"];
+		hero->setCurrentMass(static_cast<float> (obj["Mass"]));
 		hero->setSpeed(Vector2f(SpeedX, SpeedY));
 		tempObjects.push_back(hero);
 	}
@@ -459,6 +453,7 @@ void getInformationHero(nlohmann::json& obj, vector<shared_ptr<Objects>> & tempO
 			hero->isSplitted(obj["Splitted"]);
 			hero->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
 			hero->setRadius(obj["Radius"]);
+			hero->setCurrentMass(static_cast<float>(obj["Mass"]));
 			hero->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - itHero->get()->getCenter());
 			tempObjects.push_back(hero);
 		}
@@ -518,7 +513,6 @@ void GameScene::draw(RenderWindow& window)
 	{
 		obj->draw(window);
 	}		
-	window.draw(HeroMass);
 
 	if(_GameOver)
 	{

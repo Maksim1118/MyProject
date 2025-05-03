@@ -181,14 +181,7 @@ namespace Server
 			nlohmann::json FeedArray = nlohmann::json::array();
 			for (const auto& f : m_ListFeeds)
 			{
-				nlohmann::json Feed;
-				Feed["Center"] = { {"x", f->getCenter().x},{ "y", f->getCenter().y} };
-				Feed["Radius"] = f->getRadius();
-				Feed["id"] = f->getID();
-				Feed["state"] = static_cast<int>(f->state);
-				Feed["Speed"]["x"] = f->getSpeed().x;
-				Feed["Speed"]["y"] = f->getSpeed().y;
-
+				nlohmann::json Feed = FeedToJson(*f);	
 				FeedArray.push_back(Feed);
 			}
 			response["listFeed"] = FeedArray;
@@ -197,12 +190,7 @@ namespace Server
 			nlohmann::json FoodArray = nlohmann::json::array();
 			for (auto& f : _Food)
 			{
-				nlohmann::json Food;
-				Food["Center"] = { {"x", f->getCenter().x},{ "y", f->getCenter().y} };
-				Food["Radius"] = f->getRadius();
-				Food["Color"] = f->colorNum;
-				Food["id"] = f->getID();
-				Food["state"] = static_cast<int>(f->state);
+				nlohmann::json Food = FoodToJson(*f);
 				FoodArray.push_back(Food);
 			}
 			response["listFood"] = FoodArray;
@@ -210,11 +198,7 @@ namespace Server
 			nlohmann::json ThornArray = nlohmann::json::array();
 			for (auto& t : _ThornSprite)
 			{
-				nlohmann::json Thorn;
-				Thorn["Center"] = { {"x", t->getCenter().x},{ "y", t->getCenter().y} };
-				Thorn["Radius"] = t->getRadius();
-				Thorn["id"] = t->getID();
-				Thorn["state"] = static_cast<int>(t->state);
+				nlohmann::json Thorn = ThornToJson(*t);
 				ThornArray.push_back(Thorn);
 			}
 			response["listThorn"] = ThornArray;
@@ -404,6 +388,39 @@ namespace Server
 		Piece["Speed"]["y"] = piece.getSpeed().y;
 		Piece["maxV"] = piece.getMaxV();
 		return Piece;
+	}
+
+	nlohmann::json GameEngine::FoodToJson(Food& food)
+	{
+		nlohmann::json Food;
+		Food["Center"] = { {"x", food.getCenter().x},{ "y", food.getCenter().y} };
+		Food["Radius"] = food.getRadius();
+		Food["Color"] = food.colorNum;
+		Food["id"] = food.getID();
+		Food["state"] = static_cast<int>(food.state);
+		return Food;
+	}
+
+	nlohmann::json GameEngine::FeedToJson(Feed& feed)
+	{
+		nlohmann::json Feed;
+		Feed["Center"] = { {"x", feed.getCenter().x},{ "y", feed.getCenter().y} };
+		Feed["Radius"] = feed.getRadius();
+		Feed["id"] = feed.getID();
+		Feed["state"] = static_cast<int>(feed.state);
+		Feed["Speed"]["x"] = feed.getSpeed().x;
+		Feed["Speed"]["y"] = feed.getSpeed().y;
+		return Feed;
+	}
+
+	nlohmann::json GameEngine::ThornToJson(Thorn& thorn)
+	{
+		nlohmann::json Thorn;
+		Thorn["Center"] = { {"x", thorn.getCenter().x},{ "y", thorn.getCenter().y} };
+		Thorn["Radius"] = thorn.getRadius();
+		Thorn["id"] = thorn.getID();
+		Thorn["state"] = static_cast<int>(thorn.state);
+		return Thorn;
 	}
 
 	void GameEngine::allObjectsCollWithMap()
