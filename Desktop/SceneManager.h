@@ -1,6 +1,9 @@
 #pragma once
 #include "Scene.h"
 
+class GameScene;
+class MainScene;
+
 class SceneManager
 {
 public:
@@ -8,11 +11,11 @@ public:
 	~SceneManager();	
 	Scene* GetCurrent();
 	void SetMainScene();
-	void SetGameScene();
+	void SetGameScene(const std::string& playerName);
 	void SetSettingScene();
 private:
-	Scene* _MainScene = nullptr;
-	Scene* _GameScene  = nullptr;	
+	MainScene* _MainScene = nullptr;
+	GameScene* _GameScene = nullptr;
 	Scene* _current = nullptr;
 	bool _isSettingSceneVisible = false;
 };

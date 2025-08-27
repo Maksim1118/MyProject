@@ -1,8 +1,8 @@
 #include "MoveObject.h"
 
-int MoveObject::lastId = 0;
+constexpr float MAX_DIFF = 300.f;
 
-MoveObject::MoveObject(Vector2f center, float radius, int id): Objects(center, radius,id), V(0.f, 0.f), Mouse(0.f, 0.f)
+MoveObject::MoveObject(Vector2f center, float radius, string id): Objects(center, radius,id), V(0.f, 0.f), Mouse(0.f, 0.f)
 {
 
 }
@@ -35,12 +35,15 @@ void MoveObject::setSpeed(Vector2f newSpeed)
 
 void MoveObject::setDifference(Vector2f diff)
 {
-	difference = diff;
-}
-
-void MoveObject::setCenter(Vector2f newCenter)
-{
-	Center = newCenter;
+	if (GetLen(diff) > MAX_DIFF)
+	{
+		Center += diff;
+		difference = { 0, 0 };
+	}
+	else
+	{
+		difference = diff;
+	}
 }
 
 Vector2f MoveObject::getDiff()
@@ -48,13 +51,41 @@ Vector2f MoveObject::getDiff()
 	return difference;
 }
 
-float MoveObject::GetLen(const Vector2f& p1, const Vector2f& p2)
+float MoveObject::GetLen(const Vector2f& p1, const Vector2f& p2, const Vector2f& mapSize)
 {
-	return sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
+	float halfX = mapSize.x / 2.f;
+	float halfY = mapSize.y / 2.f;
+	float lenX;
+	float lenY;
+	if (fabs(p2.x - p1.x) > halfX)
+	{
+		lenX = pow(fabs(p2.x - p1.x) - halfX, 2);
+	}
+	else
+	{
+		lenX = pow(p2.x - p1.x, 2);
+	}
+
+	if (fabs(p2.y - p1.y) > halfY)
+	{
+		lenY = pow(fabs(p2.y - p1.y) - halfY, 2);
+	}
+	else
+	{
+		lenY = pow(p2.y - p1.y, 2);
+	}
+	return sqrt(lenX + lenY);
 }
 
 float MoveObject::GetLen(const Vector2f& vector) {
 	return sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
+Vector2f MoveObject::identityVector(const sf::Vector2f& vec)
+{
+	float len = GetLen(vec);
+	if (len < 1e-6) return { 0.f, 0.f };
+	return { vec.x / len, vec.y / len };
 }
 
 Vector2f MoveObject::getIdentityVector(const Vector2f& vector)

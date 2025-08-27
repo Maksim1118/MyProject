@@ -9,18 +9,30 @@ Color arrcolor[] =
 	Color(168, 17, 255) };
 
 
-Food::Food(Vector2f center, float radius, int id): Objects(Vector2f(0,0), 0, id)
+Food::Food(Vector2f center, float radius, string id): Objects(Vector2f(0,0), 0, id)
 {
 	_shape.setRadius(radius);
 	_shape.setPosition(center.x - radius, center.y - radius);	
 }
 
-void Food::setColor(int Col)
+void Food::setColor(Color color)
 {
-	_shape.setFillColor(arrcolor[Col]);
+	_shape.setFillColor(color);
 }
 
-void Food::draw(RenderWindow& window)
+
+void Food::setCenter(Vector2f newCenter)
+{
+	Center = newCenter;
+}
+
+void Food::shiftPos(float offsetX, float offsetY)
+{
+	_shape.setPosition(Center.x - _radius + offsetX, Center.y - _radius + offsetY);
+}
+
+
+void Food::draw(RenderWindow& window) const
 {	
 	window.draw(_shape);
 }

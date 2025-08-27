@@ -3,6 +3,7 @@
 #include "GameScene.h"
 #include "SettingScene.h"
 
+
 SceneManager::SceneManager()
 {
 	_GameScene = new GameScene(this);
@@ -27,8 +28,8 @@ void SceneManager::SetMainScene()
 	_current = _MainScene;	
 }
 
-void SceneManager::SetGameScene()
+void SceneManager::SetGameScene(const string& playerName)
 {
-	_current = _GameScene;	
-	_current->setActive();
+	_GameScene->setActive(playerName);
+	_current = _GameScene;
 }

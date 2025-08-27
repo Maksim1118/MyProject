@@ -1,18 +1,31 @@
 #include "Objects.h"
 #include <math.h>
 
-Objects::Objects(Vector2f center, float radius, int id) :_radius(radius), id(id), Center(center)
-{
 
+
+Objects::Objects(Vector2f center, float radius, string id) :_radius(radius), id(id), Center(center), m_IsLive(true), m_isMarked(false), m_mass(0.f)
+{
 }
 
-Objects::Objects(){}
+void Objects::TimeElapsed(int diff)
+{
+}
 
 Objects::~Objects() = default;
 
 void Objects::setRadius(float newRadius)
 {
 	_radius = newRadius;
+}
+
+void Objects::setMass(const float mass)
+{
+	m_mass = mass;
+}
+
+float Objects::getMass() const
+{
+	return m_mass;
 }
 
 float Objects::getRadius() const
@@ -25,17 +38,9 @@ Vector2f Objects::getCenter() const
 	return Center;
 }
 
-void Objects::setCenter(Vector2f newCenter)
-{
-	Center = newCenter;
-}
 
-void Objects::TimeElapsed(int diff)
-{
 
-}
-
-int Objects::getID()
+string Objects::getID() const
 {
 	return id;
 }

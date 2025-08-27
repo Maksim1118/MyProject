@@ -23,7 +23,7 @@ ObjectsServer.cpp
 PieceServer.cpp
 ThornServer.cpp
 MessageServer.cpp
- "MoveObjectServer.cpp")
+ "MoveObjectServer.cpp" "Colors.h" "UniqueIdGenerator.h" "UniqueIdGenerator.cpp"  "MapSegment.h" "Camera.h" "Camera.cpp" "Map.h" "Map.cpp" "QuadTree.cpp" "Generator.h" "ClippingAlgorithm.cpp")
 target_link_libraries(Server PRIVATE BaseFunctionLib)
 target_compile_features(Server PRIVATE cxx_std_17)
 target_include_directories(Server  PUBLIC ..\\jsonLib\\include)

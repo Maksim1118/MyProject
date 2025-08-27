@@ -1,23 +1,22 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 
+#include "UI_Element.h"
 
-using namespace sf;
-using namespace std;
+#include <functional>
 
-class Button 
+class Button : public UI_Element
 {
 public:
-    Button(const wstring text, const float x, const float y);
-    bool isPoz(const float& x, const float& y);
-    void draw(RenderWindow& window);
-    void drawBG(RenderWindow& window);
-private:
-    float _x{ 0 };
-    float _y{ 0 };
-    Text _title;
-    Sprite _BG;
-    Sprite _BG2;
-    Text createTitle(const wstring& text, const float& x, const float& y);
-};
+	Button() = default;
+	virtual ~Button() = default;
 
+	Button(const Button&) = delete;
+	Button& operator=(const Button&) = delete;
+
+	Button(Button&&) noexcept = default;
+	Button& operator=(Button&&) noexcept = default;
+
+	virtual void update(const int diff, const sf::Vector2f& mousePos)override = 0;
+	virtual void handleEvent(const sf::Event& event, const sf::Vector2f& mousePos) override = 0;
+	std::function<void()> onClick;
+};

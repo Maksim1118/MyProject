@@ -31,7 +31,7 @@ nlohmann::json Message::process(nlohmann::json request)
 	char data2[131072];
 	std::size_t received = 0;
 
-	if (socket.receive(data2, 65536, received) != sf::Socket::Done)
+	if (socket.receive(data2, 131071, received) != sf::Socket::Done)
 	{
 		cerr << "Socket failed recived" << endl;
 	}

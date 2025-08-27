@@ -13,7 +13,7 @@ namespace Server {
 	class MoveObject;
 	enum class States
 	{
-		LIVE, EATEN, READY_TO_LIVE
+		LIVE, EATEN, READY_TO_REMOVE, READY_TO_RESPAWN, READY_TO_LIVE
 	};
 
 	class Objects
@@ -25,7 +25,8 @@ namespace Server {
 		void setCenter(float& x, float& y);
 		void setCenter(Vector2f& center);
 		Vector2f getCenter() const;
-		int getID();
+		sf::FloatRect getBounds() const;
+		string getID();
 		float getRadius()const;
 		float getMass()const;
 		void addMass(float& diff);
@@ -34,13 +35,12 @@ namespace Server {
 		string  getDescription();
 		bool Eating(Objects& obj, float shift);
 		virtual bool checkEaten(MoveObject* other) = 0;
+		virtual void setEatenState() = 0;
+		bool isLive();
 		States state;
+		sf::Vector2i m_currSegIndices;
 	protected:
-		int id;
+		string id;
 		Vector2f _center{ 0,0 };
-	private:
-		static int lastId;
 	};
-
-
 }

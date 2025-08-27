@@ -2,16 +2,18 @@
 #include "MoveObjectServer.h"
 #include <iostream>
 
+constexpr int RESPAWN_TIME = 3000;
+
 namespace Server
 {
-	Thorn::Thorn() : Objects(Vector2f(0, 0), _ThornSpriteMass), respawnTime(10000), curTime(0)
+	Thorn::Thorn() : Objects(Vector2f(0, 0), _ThornSpriteMass), elapsedRespTime(0)
 	{
 
 	}
 
 	void Thorn::TimeElapsed(int diff) 
 	{
-		if (state == States::EATEN)
+		if (state == States::READY_TO_RESPAWN)
 		{
 			update(diff);
 		}
@@ -19,24 +21,30 @@ namespace Server
 
 	void Thorn::update(int diff)
 	{
-		curTime += diff;
-		if (curTime >= respawnTime)
+		elapsedRespTime += diff;
+		if (elapsedRespTime >= RESPAWN_TIME)
 		{
+			elapsedRespTime = 0;
 			state = States::READY_TO_LIVE;
-			curTime = 0;
 		}
 	}
 
-	bool Thorn::checkEaten(MoveObject* player)
+	bool Thorn::checkEaten(MoveObject* obj)
 	{
-		if (player->state == States::EATEN || state == States::EATEN)
+		if (!obj->isLive() || !isLive())
 			return false;
-		if (player->_mass > _ThornSpriteMass * 1.2f && player->Eating(*this, -getRadius()))
+		if (obj->_mass > _ThornSpriteMass * 1.2f && obj->Eating(*this, -getRadius()))
 		{
-			player->readyToWaekend = true;
+			obj->readyToWaekend = true;
+			setEatenState();
 			return true;	
 		}
 		return false;
+	}
+
+	void Thorn::setEatenState()
+	{
+		state = States::READY_TO_RESPAWN;
 	}
 	
 }

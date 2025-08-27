@@ -1,8 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "ObjectsServer.h"
+#include "Colors.h"
 
 #include <iostream>
+
 using namespace sf;
 using namespace std;
 
@@ -16,13 +18,23 @@ namespace Server
 	public:
 		Food();
 		void TimeElapsed(int diff);
-		void update(int diff);
 		bool checkEaten(MoveObject* obj) override;
-		int colorNum;
+		void setEatenState() override;
 		bool eatable = true;
+
+		inline sf::Color getColor() const
+		{
+			return m_ListColors[m_ColorIndex];
+		}
 	protected:
+		ColorsFood m_ListColors;
+		int m_ColorIndex;
 		int respawnTime;
-		int curTime;
+		int elapsedRespTime;
+		bool m_isRespawnState;
+
+	private:
+		void update(int diff);
 	};
 }
 

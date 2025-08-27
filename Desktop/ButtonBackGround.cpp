@@ -1,7 +1,7 @@
-#include "Button.h"
+#include "ButtonBackGround.h"
 #include "ResourñeManager.h"
 
-Button::Button(const wstring text, const float x,const float y)
+ButtonBackGround::ButtonBackGround(const wstring text, const float x,const float y)
 {
     _x = x;
     _y = y;
@@ -10,8 +10,10 @@ Button::Button(const wstring text, const float x,const float y)
     _BG.setTexture(*rec.textures[ResourceManager::Textures::BUTBG]);
     _BG.setPosition(x, y);
 }
-bool Button::isPoz(const float& x, const float& y)
+bool ButtonBackGround::isPoz(const float& x, const float& y)
 {
+    if (!isActive) return false;
+
     if (x < _x)
     {
         return false;
@@ -30,17 +32,21 @@ bool Button::isPoz(const float& x, const float& y)
     }
     return true;
 }
-void Button::draw(RenderWindow& window)
+void ButtonBackGround::draw(RenderWindow& window)
 {
     _title.setPosition(_x + 220 / 2 - (_title.getGlobalBounds().width) / 2, _y + 20);
     window.draw(_title);
 }
-void Button::drawBG(RenderWindow& window)
+void ButtonBackGround::setActive(const bool active)
+{
+    isActive = active;
+}
+void ButtonBackGround::drawBG(RenderWindow& window)
 {
     window.draw(_BG);
 }
 
-Text Button::createTitle(const wstring& text,const float& x, const float& y)
+Text ButtonBackGround::createTitle(const wstring& text,const float& x, const float& y)
 {
     Text ButtonText;
     ButtonText.setFont(*rec.font); 

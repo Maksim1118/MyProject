@@ -28,10 +28,10 @@ void listen()
 			printf("Error\n");
 		}
 
-		char data[65536];
+		char data[131072];
 		std::size_t received = 0;
 
-		if (socket.receive(data, 65536, received) != sf::Socket::Done)
+		if (socket.receive(data, 131071, received) != sf::Socket::Done)
 		{
 			
 		}
@@ -61,11 +61,7 @@ void listen()
 
 					if (socket.send(data2.c_str(), data2.size() + 1) != sf::Socket::Done)
 					{
-					
-					}
-					else
-					{
-						cout << data2 << endl;
+						cerr << "error send data2" << endl;
 					}
 					break;
 				}

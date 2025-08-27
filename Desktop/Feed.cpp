@@ -1,6 +1,6 @@
 #include "Feed.h"
 
-Feed::Feed(Vector2f center, float radius, int id) : MoveObject(center, radius, id)
+Feed::Feed(Vector2f center, float radius, string id) : MoveObject(center, radius, id)
 {
 	_shape.setRadius(radius);
 	_shape.setPosition(center.x - radius, center.y - radius);
@@ -23,8 +23,19 @@ void Feed::TimeElapsed(int diff)
 	MoveObject::TimeElapsed(diff);
 }
 
-void Feed::draw(RenderWindow& window)
+
+void Feed::setCenter(Vector2f newCenter)
+{
+	Center = newCenter;
+}
+
+void Feed::shiftPos(float offsetX, float offsetY)
 {
 	_shape.setPosition(Center.x - _shape.getRadius(), Center.y - _shape.getRadius());
+}
+
+
+void Feed::draw(RenderWindow& window) const
+{
 	window.draw(_shape);
 }

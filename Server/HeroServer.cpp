@@ -5,9 +5,11 @@
 
 namespace Server
 {
-	Hero::Hero(list<shared_ptr<Feed>>& feeds, string  text) : m_ListFeeds(feeds), Bot(text)
+	Hero::Hero(std::unordered_map <std::string, std::shared_ptr<Feed>>& feeds, const string& name) : Bot(), m_ListFeeds(feeds)
 	{
+		m_Name = name;
 		Feeded = false;
+		m_IsGameOver = false;
 	}
 
 	Hero& Hero::operator =(const Hero& other)
@@ -25,9 +27,22 @@ namespace Server
 
 	void Hero::TimeElapsed(int diff)
 	{
-		if (state == States::EATEN)
+		if (state == States::READY_TO_REMOVE)
+		{
+			m_IsGameOver = true;
 			return;
+		}
 		Bot::TimeElapsed(diff);
+	}
+
+	void Hero::setEatenState()
+	{
+		state = States::READY_TO_REMOVE;
+	}
+
+	bool Hero::isGameOver()
+	{
+		return m_IsGameOver;
 	}
 
 	void Hero::createFeed(Objects& obj)
@@ -35,11 +50,11 @@ namespace Server
 		shared_ptr<Feed> f = make_shared<Feed>();
 		obj._mass -= f->getMass();
 		f->setCenter(obj.getCenter());
-		Vector2f Dir = getIdentityVector(_Mouse - obj.getCenter());
+		Vector2f Dir = getIdentityVector(GetDiff(_Mouse,obj.getCenter()));
 		f->setV(Dir * 0.5f);
 		f->setParentCenter(obj.getCenter());
 		f->setParentRadius(obj.getRadius());
-		m_ListFeeds.push_back(f);
+		m_ListFeeds[f->getID()] = f;
 	}
 
 	void Hero::setFeeded()
@@ -48,9 +63,9 @@ namespace Server
 		{
 			for (auto& p : pieces)
 			{
-				if (p->getMass() < 400.f)
+				if (p.second->getMass() < 400.f)
 					continue;
-				createFeed(*p);
+				createFeed(*p.second);
 			}
 		}
 		else

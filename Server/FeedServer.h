@@ -13,11 +13,11 @@ namespace Server
 		void setParentCenter(Vector2f& newCenter);
 		void setParentRadius(float newRadius);
 		bool checkEaten(MoveObject* obj) override;
+		void setEatenState() override;
 	private:
 		Vector2f parentCenter;
 		float parentRadius;
 		int colorNum;
-		bool eatable;
 		int respawnTime;
 		int curTime;
 		bool m_IsUnderHero;

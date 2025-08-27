@@ -10,15 +10,18 @@
 class Bot : public MoveObject
 {
 public:
-	Bot(Vector2f center, float radius, int Col, string text, int id);
-	void TimeElapsed(int diff);
-	void isSplitted(bool splite);
+	Bot(Vector2f center, float radius, int Col, string text, string id);
+	void TimeElapsed(int diff) override;
+	void setSplitted(bool splitted);
+	bool isSplitted() const;
 	void setPosMouse(float x, float y);
-	void draw(RenderWindow& window)override;
-	list<shared_ptr<Piece>> pieces;
+	void draw(RenderWindow& window) const override;
+	void setCenter(Vector2f newCenter) override;
+	void shiftPos(float offsetX = 0, float offsetY = 0) override;
+	list<Piece*> pieces;
 protected:
-	void pieceToSides();
+	/*void pieceToSides();*/
 	CircleShape _shape;
 	Text name;
-	bool splitted;	
+	bool m_Splitted;	
 };

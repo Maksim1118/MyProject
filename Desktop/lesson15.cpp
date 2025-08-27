@@ -2,11 +2,12 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "SceneManager.h"
-#include "Button.h"
+#include "ButtonBackGround.h"
 #include "SettingScene.h"
 #include "ResourсeManager.h"
 #include "GameScene.h"
 #include "Message.h"
+#include "PastTime.h"
 
 #include <iostream>
 #include <thread>
@@ -26,25 +27,27 @@ Vector2f getViewSize()
     return Vector2f(widthRect, heightRect);
 }
 
-bool Options::_isBoxPressed = false;
-bool Options::_isSaveActive = false;
-bool Options::_isKeySpliteChanged = false;
-bool Options::_isKeyFeedingChanged = false;
+//bool Options::_isBoxPressed = false;
+//bool Options::_isSaveActive = false;
+//bool Options::_isKeySpliteChanged = false;
+//bool Options::_isKeyFeedingChanged = false;
 int main()
 {
     setlocale(LC_ALL, "ru");
-    Options::OpenSaved("SaveSettings.txt"); 
+    /*Options::OpenSaved("SaveSettings.txt"); */
 
     ContextSettings settings;
-    settings.antialiasingLevel = 8;
+    settings.antialiasingLevel = 12;
     RenderWindow window(VideoMode(1200, 1200), "HUNGRY BALLS", Style::Titlebar | Style::Close, settings);
-    Options::_WindowWidth = window.getSize().x;
-    Options::_WindowHeight = window.getSize().y;
+ /*   Options::_WindowWidth = window.getSize().x;
+    Options::_WindowHeight = window.getSize().y;*/
+
+
+
+
 
     rec.load();
   
-    Clock clock;
-    Time time = clock.getElapsedTime();
     SceneManager manager;
 
     RectangleShape shape;
@@ -75,18 +78,20 @@ int main()
 
     nlohmann::json request;
     nlohmann::json response;
+    PastTime time;
+    /*PastTime time2;*/
     while (window.isOpen())
     {
-        if (!isMusicPlaying)
+        /*if (!isMusicPlaying)
         {           
             rec.music->setLoop(true);         
             rec.music->play();
   
             isMusicPlaying = true;
-        }       
-        rec.music->setVolume(Options::volume);
-        
+        }       */
+       /* rec.music->setVolume(Options::volume);*/
         mousePos = window.mapPixelToCoords(Mouse::getPosition(window));
+        manager.GetCurrent()->updateMousePos(mousePos);
         Event event;
         while (window.pollEvent(event))
         {          
@@ -98,18 +103,21 @@ int main()
                 window.setView(view);
               
             }           
-            manager.GetCurrent()->HandleEvent(event, mousePos);
+            manager.GetCurrent()->HandleEvent(event);
 
             if (event.type == Event::Closed)
             {
                 window.close();
             }               
         }
+        time.update();
        
-        Time time2 = clock.getElapsedTime();
-        int  diff = time2.asMilliseconds() - time.asMilliseconds();
-        time = time2;
+        int diff = time.getDeltaTime();
+       /* time2.update();*/
+       /* int diffEvents = time2.getDeltaTime();*/
         manager.GetCurrent()->TimeElapsed(diff);
+      /*  time2.update();
+        int diffTimeElapsed = time2.getDeltaTime();*/
         window.clear();
         manager.GetCurrent()->draw(window);
         window.draw(shape);
@@ -119,7 +127,11 @@ int main()
             window.draw(rect1);
             window.draw(rect2);
         }     
-        window.display();      
+        window.display();   
+      /*  time2.update();
+        int diffDraw = time2.getDeltaTime();*/
+
+        /*cout << "diffEvents: " << diffEvents << " diffTimeElapsed: " << diffTimeElapsed << " diffDraw: " << diffDraw << endl;*/
     }
     rec.clear();
     return 0;

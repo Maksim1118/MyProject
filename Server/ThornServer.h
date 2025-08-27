@@ -19,10 +19,10 @@ namespace Server
 		Thorn();
 		void TimeElapsed(int diff);
 		void update(int diff);
-		bool checkEaten(MoveObject* player) override;
+		bool checkEaten(MoveObject* obj) override;
+		void setEatenState() override;
 	private:
-		int curTime;
-		int respawnTime;
+		int elapsedRespTime;
 	};
 }
 

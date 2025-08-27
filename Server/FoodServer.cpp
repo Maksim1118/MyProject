@@ -1,16 +1,19 @@
 #include "FoodServer.h"
 #include "MoveObjectServer.h"
 
+constexpr int RESPAWN_TIME = 3000;
+
 namespace Server
 {
-	Food::Food() : Objects(Vector2f(0.f, 0.f), _FoodMass), respawnTime(10000), curTime(0)
+	Food::Food() : Objects(Vector2f(0.f, 0.f), _FoodMass), respawnTime(10000), elapsedRespTime(0), m_isRespawnState(false)
 	{
-		colorNum = rand() % 6;
+		m_ListColors = getFoodColors();
+		m_ColorIndex = rand() % (m_ListColors.size() - 1);
 	}
 
 	void Food::TimeElapsed(int diff)
 	{
-		if (state == States::EATEN)
+		if (state == States::READY_TO_RESPAWN)
 		{
 			update(diff);
 		}
@@ -18,22 +21,27 @@ namespace Server
 
 	void Food::update(int diff)
 	{
-		curTime += diff;
-		if (curTime >= respawnTime)
+		elapsedRespTime += diff;
+		if (elapsedRespTime >= RESPAWN_TIME)
 		{
 			state = States::READY_TO_LIVE;
-			curTime = 0;
+			elapsedRespTime = 0;
 		}
 	}
 
 	bool Food::checkEaten(MoveObject* obj)
 	{
-		if (state == States::EATEN || obj->state == States::EATEN)
+		if (!isLive() || !obj->isLive())
 			return false;
 		if (obj->Eating((*this), -getRadius()))
 		{
+			setEatenState();
 			return true;
 		}
 		return false;
+	}
+	void Food::setEatenState()
+	{
+		state = States::READY_TO_RESPAWN;
 	}
 }

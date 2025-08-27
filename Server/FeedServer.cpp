@@ -4,22 +4,26 @@ namespace Server
 {
 	Feed::Feed() : MoveObject(Vector2f(0, 0), _FoodMass), parentCenter( 0.f,0.f ), parentRadius(0.f), m_IsUnderHero(true)
 	{
-		colorNum = 2;
-		state = States::EATEN;
+		colorNum = rand() % 6;
+		state = States::LIVE;
 	}
 
 	void Feed::TimeElapsed(int diff)
 	{
-		if (GetLen(parentCenter, getCenter()) > parentRadius * 1.2)
+		/*if (GetLen(parentCenter, getCenter()) > parentRadius * 1.2)
 		{
 			if (m_IsUnderHero)
 			{
 				state = States::LIVE;
 				m_IsUnderHero = false;
 			}
-		}
-		if (GetLen(parentCenter, getCenter()) > parentRadius)
+		}*/
+		if (GetDist(parentCenter, getCenter()) > parentRadius * 1.2f)
 		{
+			if (m_IsUnderHero)
+			{
+				m_IsUnderHero = false;
+			}
 			float lenV = GetLen(V);
 			float newlenV = lenV - 0.0005f * (float)diff;
 			if (newlenV <= 0)
@@ -33,9 +37,6 @@ namespace Server
 			}
 		}
 		Move(V * (float)diff);
-		cout << "Feed" << "    " ;
-		cout << "FeedSpeed: " << V.x << "    " << V.y << "  ";
-		cout << "FeedCoords: " << _center.x << "    " << _center.y << endl;
 	}
 
 	void Feed::setV(Vector2f& newV)
@@ -55,12 +56,17 @@ namespace Server
 
 	bool Feed::checkEaten(MoveObject* obj)
 	{
-		if (state == States::EATEN || obj->state == States::EATEN)
+		if (!isLive() || !obj->isLive() || m_IsUnderHero)
 			return false;
 		if (obj->Eating((*this), -getRadius()))
 		{
+			setEatenState();
 			return true;
 		}
 		return false;
+	}
+	void Feed::setEatenState()
+	{
+		state = States::READY_TO_REMOVE;
 	}
 }

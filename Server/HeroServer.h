@@ -2,6 +2,8 @@
 #include "ObjectsServer.h"
 #include "BotServer.h"
 #include "FeedServer.h"
+#include "Camera.h"
+#include "MapSegment.h"
 
 #include <list>
 #include <iostream>
@@ -16,14 +18,18 @@ namespace Server
 	class Hero : public Bot
 	{
 	public:
-		Hero(list<shared_ptr<Feed>>& feeds, string text);
+		Hero(std::unordered_map<std::string, std::shared_ptr<Feed>>& feeds, const std::string& name);
 		Hero& operator =(const Hero&);
 		void setFeeded();
 		bool isFeeded();
 		void TimeElapsed(int diff)override;
+		void setEatenState() override;
+		bool isGameOver();
 	private:
-		list<shared_ptr<Feed>> &m_ListFeeds;
+		std::unordered_map <std::string, std::shared_ptr<Feed>>&m_ListFeeds;
 		bool Feeded;
+		bool m_IsGameOver;
+	private:
 		void createFeed(Objects& obj);
 	};
 }

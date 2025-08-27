@@ -14,7 +14,7 @@ set(RESOURCE_DEST_DIR "${CMAKE_BINARY_DIR}/bin/Resources")
 #FetchContent_MakeAvailable(SFML)
 
 add_executable(Desktop
-Button.cpp
+"ButtonBackGround.cpp"
 Food.cpp
 GameScene.cpp
 Hero.cpp
@@ -28,7 +28,7 @@ SettingScene.cpp
 Thorn.cpp
 ResourceManager.cpp
 Message.cpp
-Bot.cpp "Piece.h" "Piece.cpp" "Feed.cpp" "Feed.h" "MoveObject.h" "MoveObject.cpp" "JsonParser.cpp")
+Bot.cpp "Piece.h" "Piece.cpp" "Feed.cpp" "Feed.h" "MoveObject.h" "MoveObject.cpp" "JsonParser.cpp" "MyAlgorithms.hpp" "PastTime.h"  "MapSegment.h" "Camera.h" "Camera.cpp" "HoverButton.h" "HoverButton.cpp" "SubScene.h" "SubScene.cpp" "CheckBox.h" "CheckBox.cpp" "SimplifiedSfmlFunc.cpp" "VolumeSlider.h" "VolumeSlider.cpp" "CharButton.cpp"  "KeyBindController.h" "KeyBindController.cpp" "KeyBindType.h" "TextButton.h" "TextButton.cpp" "SettingConfig.h" "ComboBox.h" "ComboBox.cpp" "UI_Element.h" )
 
 target_link_libraries(Desktop PRIVATE BaseFunctionLib)
 target_compile_features(Desktop PRIVATE cxx_std_17)

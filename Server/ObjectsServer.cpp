@@ -1,13 +1,14 @@
 #include "ObjectsServer.h"
 
+#include "UniqueIdGenerator.h"
+
 #include <math.h>
 
 namespace Server {
 
-	int Objects::lastId = 0;
-
-	Objects::Objects(Vector2f center, float mass) : _center(center), id(lastId++), _mass(mass)
+	Objects::Objects(Vector2f center, float mass) : _center(center), _mass(mass), m_currSegIndices(-10, -10)
 	{
+		id = UniqueIdGenerator::generateID();
 		state = States::LIVE;
 	}
 
@@ -29,7 +30,12 @@ namespace Server {
 		return _center;
 	}
 
-	int Objects::getID()
+	sf::FloatRect Objects::getBounds() const
+	{
+		return sf::FloatRect( _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f);
+	}
+
+	string Objects::getID()
 	{
 		return id;
 	}
@@ -53,19 +59,22 @@ namespace Server {
 	{
 		if (isCollision(obj, shift))
 		{
-			_mass += obj.getMass();
-			obj.state = States::EATEN;
+			_mass += obj.getMass() * 3.f;
 			return true;
 		}
 		return false;
 	}
 
+	bool Objects::isLive()
+	{
+		return state == States::LIVE;
+	}
 
 	bool Objects::isCollision(const Objects& obj, const float shift)
 	{
 		Vector2f Pos1 = getCenter();
 		Vector2f Pos2 = obj.getCenter();
-		return GetLen(Pos1, Pos2) < getRadius() + obj.getRadius() + shift;
+		return GetDist(Pos1, Pos2) < getRadius() + obj.getRadius() + shift;
 	}
 
 	string  Objects::getDescription()

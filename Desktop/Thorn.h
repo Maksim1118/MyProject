@@ -14,9 +14,10 @@ const float _ThornSpriteR = sqrt(_ThornSpriteMass);
 class Thorn : public Objects
 {
 public:
-	Thorn(Vector2f center,  float radius, int id);
-	void TimeElapsed(int diff);
-	void draw(RenderWindow& window);
+	Thorn(Vector2f center,  float radius, string id);
+	void draw(RenderWindow& window) const;
+	void shiftPos(float offsetX = 0, float offsetY = 0) override;
+	void setCenter(Vector2f newCenter) override;
 private:
 	Sprite _ThornSprite;	
 };
