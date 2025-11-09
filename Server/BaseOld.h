@@ -20,8 +20,6 @@ namespace Server
 	sf::Vector2f calcAcceleration(const sf::Vector2f& F, const float mass);
 	sf::Vector2f calcSpeed(const sf::Vector2f& v0, const sf::Vector2f& a, int diff, float maxV, float koef);
 
-	float lerpFunc(float a, float b, float t);
-
 	sf::Vector2f findCyclicCenter(const std::vector<sf::Vector2f>& centers);
 	float distanceToMapBorder(const sf::Vector2f& center, const sf::Vector2f& dir);
 	sf::Vector2f identityVector(sf::Vector2f vec);

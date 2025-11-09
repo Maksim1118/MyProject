@@ -3,6 +3,7 @@
 #include "IRegistrator.h"
 #include "BotServer.h"
 #include "Constants.h"
+#include "BaseFunctions.h"
 
 #include <iostream>
 
