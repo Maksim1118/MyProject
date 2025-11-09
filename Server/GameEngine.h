@@ -5,13 +5,12 @@
 #include "nlohmann\json.hpp"
 #include "Map.h"
 #include "QuadTree.h"
+#include "RTree.h"
 
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-
-#define PI 3.141592653589793
+#include <algorithm>
 
 
 namespace  Server
@@ -36,42 +35,67 @@ namespace  Server
 	{
 	public:
 		GameEngine();
-		nlohmann::json process(nlohmann::json request);
 		/*bool isCollWithMap(const Vector2f& pos);*/
 		/*Vector2f getCoorCollWithMap(const  Vector2f& pos);*/
-		void addInRemoveList(const std::string& id);
+	/*	void addInRemoveList(const std::string& id);
 
-		Vector2f getCoordinateFromMap(const Vector2f& center);
-		Vector2f getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height);
+		Vector2f getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height);*/
 		virtual void TimeElapsed(int& diff);
+		nlohmann::json process(nlohmann::json request);
 
-		bool thornEaten = false;
+		/*bool thornEaten = false;*/
 
 	/*	std::unordered_map <std::string, std::shared_ptr<Thorn>> listThorns;
 		std::unordered_map <std::string, std::shared_ptr<Food>> listFoods;
 		std::unordered_map <std::string, std::shared_ptr<Hero>> listHeroes;
 		std::unordered_map <std::string, std::shared_ptr<Bot>> listBots;
-		std::unordered_map <std::string, std::shared_ptr<Feed>> m_ListFeeds;*/
+		std::unordered_map <std::string, std::shared_ptr<Feed>> listFeeds;*/
 
 	private:
-		std::unordered_set <std::string> respawnList;
-		std::unordered_set <std::string> removeList;
+		/*std::unordered_set <std::string> respawnList;
+		std::unordered_map<std::string, ObjectType> removeList;*/
 
-		Map m_map;
+		std::unique_ptr<Map> m_map;
 		Camera m_camera;
+	private:
+		static nlohmann::json HeroToJson(Hero& hero);
+		static nlohmann::json BotToJson(Bot& bot);
+		static nlohmann::json PieceToJson(Piece& piece);
+		static nlohmann::json FoodToJson(Food& food);
+		static nlohmann::json FeedToJson(Feed& feed);
+		static nlohmann::json ThornToJson(Thorn& thorn);
+		static nlohmann::json colorToJson(sf::Color color);
 
-		void updateMoveObjectFromMapBounder(shared_ptr<MoveObject> obj);
-		std::vector<sf::FloatRect> computeFreeZones(const sf::FloatRect& mapBounds, const std::vector<sf::FloatRect>& occupiedZones);
+		template<typename Container, typename Func, typename PtrGetter>
+		static void fillListToJson(Container& list, Func convertFunc, PtrGetter getPtr, nlohmann::json& outJsonArray)
+		{
+			
+			for (auto& element : list)
+			{
+				auto* objPtr = getPtr(element);
+				/*if (!objPtr || !objPtr->m_isLive())
+				{
+					continue;
+				}*/
+
+
+				auto jsonObj = convertFunc(*objPtr);
+
+				outJsonArray.push_back(jsonObj);
+			}
+			
+		}
+		/*std::vector<sf::FloatRect> computeFreeZones(const sf::FloatRect& mapBounds, const std::vector<sf::FloatRect>& occupiedZones);
 		std::vector<sf::FloatRect> subtractRect(const sf::FloatRect& freeZone, const sf::FloatRect& occ);
 		
 		template<typename T>
 		bool spawnObj(std::shared_ptr<T>& obj);
 		template<typename T>
-		void fillObjects(size_t listSize);
+		void fillObjects(size_t listSize);*/
 		/*bool areAdjacentOrOverlapping(const sf::FloatRect& f1, const sf::FloatRect& f2);
 		sf::FloatRect boundingRect(const sf::FloatRect& f1, const sf::FloatRect& f2);
 		std::vector<sf::FloatRect> mergeFreeZones(const std::vector<sf::FloatRect> & zones);*/
-		QuadTree quadTree;
+		
 		/*template<typename T>
 		void updateSegments(const std::string& id, const std::shared_ptr<T>& item)
 		{
@@ -105,63 +129,37 @@ namespace  Server
 		}*/
 
 
-		list<weak_ptr<Objects>> m_WeakListPtr;
-		static float m_TimeUpdateListObjects;
-		static nlohmann::json HeroToJson(Hero& hero);
-		static nlohmann::json BotToJson(Bot& bot);
-		static nlohmann::json PieceToJson(Piece& piece);
-		static nlohmann::json FoodToJson(Food& food);
-		static nlohmann::json FeedToJson(Feed& feed);
-		static nlohmann::json ThornToJson(Thorn& thorn);
-		static nlohmann::json colorToJson(sf::Color color);
+		/*list<weak_ptr<Objects>> m_WeakListPtr;*/
+		/*static float m_TimeUpdateListObjects;*/
+		
 
-		template<typename Container, typename Func, typename PtrGetter>
-		static void fillListToJson(Container& list, Func convertFunc, PtrGetter getPtr, nlohmann::json& outJsonArray)
-		{
-			/*cout <<"\n\nlist size: "<<  list.size() << endl;*/
-			for (auto& element : list)
-			{
-				auto* objPtr = getPtr(element);
-				if (!objPtr || !objPtr->isLive())
-				{
-					continue;
-				}
-					
-
-				auto jsonObj = convertFunc(*objPtr);
-	
-				outJsonArray.push_back(jsonObj);
-			}
-			/*cout << "jsonArraysize: " << outJsonArray.size() << endl << endl;*/
-		}
-
-		bool objInSegment(shared_ptr<Objects>& obj, int segFirstInd, int segSecondInd,sf::Vector2f shift = { 0, 0 });
+		/*bool objInSegment(shared_ptr<Objects>& obj, int segFirstInd, int segSecondInd,sf::Vector2f shift = { 0, 0 });
 
 		void updatePlayersList(float diff);
-		void updateFeedsList(float diff);
+		void updateFeedsList(float diff);*/
 
 
 
 		/*void allObjectsCollWithMap();*/
-		void calcDirMoveBot(int diff);
+		/*void calcDirMoveBot(int diff);
 		Vector2f calcDistBotAndObj(Objects& obj1, Objects& obj2, float zeroZone);
-		bool checkAllCollision(Objects& obj);
+		bool checkAllCollision(Objects& obj);*/
 
-		template<typename T, typename Obj>
-		void updateAndRemove(std::list<std::shared_ptr<T>>& objectList, std::list<std::weak_ptr<Obj>>& weakList, float diff) {
-			for (auto it = objectList.begin(); it != objectList.end();) {
-				(*it)->TimeElapsed(diff);
-				if ((*it)->state == States::EATEN)
-				{
-					/*shared_ptr<T> tempPtr = *it;
-					weakList.push_back(tempPtr);*/
-					it = objectList.erase(it);
-				}
-				else {
-					++it;
-				}
-			}
-		}
+		//template<typename T, typename Obj>
+		//void updateAndRemove(std::list<std::shared_ptr<T>>& objectList, std::list<std::weak_ptr<Obj>>& weakList, float diff) {
+		//	for (auto it = objectList.begin(); it != objectList.end();) {
+		//		(*it)->TimeElapsed(diff);
+		//		if ((*it)->m_state == States::EATEN)
+		//		{
+		//			/*shared_ptr<T> tempPtr = *it;
+		//			weakList.push_back(tempPtr);*/
+		//			it = objectList.erase(it);
+		//		}
+		//		else {
+		//			++it;
+		//		}
+		//	}
+		//}
 
 		/*template<typename T> void updateList(std::unordered_map <std::string, std::shared_ptr<T>>& list, float diff)
 		{
@@ -171,7 +169,7 @@ namespace  Server
 			}
 		}*/
 
-		void clearWeakList();
+		/*void clearWeakList();
 
 		template<typename T> void spawnList(list<shared_ptr<T>>& _list)
 		{
@@ -190,7 +188,7 @@ namespace  Server
 			float x = (float)(rand() % fieldWidth);
 			float y = (float)(rand() % fieldHeight);
 			ptrObj->setCenter(x, y);
-		}
+		}*/
 
 	/*	void shiftObj(shared_ptr<Objects> ptrObj)
 		{
@@ -239,26 +237,26 @@ namespace  Server
 			}
 		}*/
 
-		template<typename T, typename STsegments, typename SpawnFunc, typename FindSegIndFunc>
-		void fillSegments(int listSize, STsegments& segments, SpawnFunc spawnFunc, FindSegIndFunc findSegIndFunc)
-		{
-			for (int i = 0; i < listSize; ++i)
-			{
-				std::shared_ptr<T> obj = std::make_shared<T>();
+		//template<typename T, typename STsegments, typename SpawnFunc, typename FindSegIndFunc>
+		//void fillSegments(int listSize, STsegments& segments, SpawnFunc spawnFunc, FindSegIndFunc findSegIndFunc)
+		//{
+		//	for (int i = 0; i < listSize; ++i)
+		//	{
+		//		std::shared_ptr<T> obj = std::make_shared<T>();
 
-				sf::Vector2f centerObj = spawnFunc(obj);
-				std::vector<sf::Vector2i> segmentIndices = findSegIndFunc(obj);
-				if (segmentIndices.empty())
-				{
-					obj = nullptr;
-					continue;
-				}
-				for (int j = 0; j < segmentIndices.size(); ++j)
-				{
-					segments[segmentIndices[j].x][segmentIndices[j].y].getSegmentList<T>()[obj->getID()] = obj;
-				}
-			}
-		}
+		//		sf::Vector2f centerObj = spawnFunc(obj);
+		//		std::vector<sf::Vector2i> segmentIndices = findSegIndFunc(obj);
+		//		if (segmentIndices.empty())
+		//		{
+		//			obj = nullptr;
+		//			continue;
+		//		}
+		//		for (int j = 0; j < segmentIndices.size(); ++j)
+		//		{
+		//			segments[segmentIndices[j].x][segmentIndices[j].y].getSegmentList<T>()[obj->getID()] = obj;
+		//		}
+		//	}
+		//}
 
 	/*	template<typename T>
 		void updateIndices(std::shared_ptr<T> obj)
@@ -315,7 +313,7 @@ namespace  Server
 				}
 			}
 		}*/
-		bool isOutSegment(sf::Vector2i indices);
+		/*bool isOutSegment(sf::Vector2i indices);*/
 
 		/*template<typename T>
 		void addToSegment(const sf::Vector2i& indices, const std::string& id, const std::shared_ptr<T>& item)
@@ -386,7 +384,7 @@ namespace  Server
 			}
 		}*/
 
-		template<typename T> void updatePosAfterEaten(shared_ptr<T>& ptrObj, list<shared_ptr<T>>& listPtrObjects)
+	/*	template<typename T> void updatePosAfterEaten(shared_ptr<T>& ptrObj, list<shared_ptr<T>>& listPtrObjects)
 		{
 			bool collision = true;
 			while (collision)
@@ -416,7 +414,7 @@ namespace  Server
 			
 			for(auto it = objectList.begin(); it != objectList.end();)
 			{
-				if ((*it)->state == States::EATEN) {
+				if ((*it)->m_state == States::EATEN) {
 					respawnTimeList.push_back(TimeRespawn);
 					
 					it = objectList.erase(it);
@@ -440,12 +438,12 @@ namespace  Server
 					++it;
 				}
 			}
-		}
+		}*/
 	};
-	template<typename T>
+	/*template<typename T>
 	inline void GameEngine::fillObjects(size_t listSize)
 	{
-		auto& list = m_map.getGlobalList<T>();
+		auto& list = m_map.getList<T>();
 		for (int i = 0; i < listSize; i++)
 		{
 			std::shared_ptr<T> obj;
@@ -458,123 +456,120 @@ namespace  Server
 				}
 				else
 				{
-					if (!m_map.addToGlobalList(obj->getID(), obj))
+					if (!m_map.addInList(obj->getID(), obj))
 					{
 						cerr << "error add To Global List in Fill Func\n";
 					}
 				}
 			}
 		}
-	}
-	template<typename T>
-	inline bool GameEngine::spawnObj(shared_ptr<T>& obj)
-	{
-		float rMin = obj->getRadius() + offsetSpawn;
-		float rMax = obj->getRadius() * 4;
-		Vector2f origin;
-		origin.x = genNumber<float>(rMax, fieldWidth - rMax );
-		origin.y = genNumber<float>(rMax, fieldHeight - rMax);
+	}*/
+	//template<typename T>
+	//inline bool GameEngine::spawnObj(shared_ptr<T>& obj)
+	//{
+	//	const float objRadius = obj->getRadius();
+	//	const float gridSize = objRadius * 2.5f;
 
-		for (int attempt = 0; attempt < maxAttempsSpawn; ++attempt)
-		{
-			float dist = genNumber<float>(rMin, rMax);
-			const int angleSteps = 20;
-			for (int angleIdx = 0; angleIdx < angleSteps; ++angleIdx)
-			{
-				float angle = 2.f * PI * angleIdx / angleSteps;
-				Vector2f newPoint = origin + Vector2f(std::cos(angle), std::sin(angle)) * dist;
+	//	vector<Vector2f> validPositions;
+	//
+	//	for (float x = objRadius; x < fieldWidth - objRadius; x += gridSize)
+	//	{
+	//		for (float y = objRadius; y < fieldHeight - objRadius; y += gridSize)
+	//		{
+	//			validPositions.emplace_back(x, y);
+	//		}
+	//	}
 
-				FloatRect queryRect(newPoint.x - rMin, newPoint.y - rMin, rMin * 2.f, rMin * 2.f);
-				const auto& candidates = quadTree.retrive(queryRect);
+	//	random_shuffle(validPositions.begin(), validPositions.end());
 
-				bool collision = false;
-				for (const auto& candidate : candidates)
-				{
-					Vector2f candidateCenter(candidate.bounds.left + candidate.bounds.width / 2.f, candidate.bounds.top + candidate.bounds.height / 2.f);
-					float candidateRadius = std::min(candidate.bounds.width, candidate.bounds.height) / 2.f;
+	//	for (const auto& pos : validPositions)
+	//	{
+	//		FloatRect queryRect(pos.x - gridSize, pos.y - gridSize, gridSize * 2.f, gridSize * 2.f);
+	//		const auto& candidates = quadTree.retrive(queryRect);
 
-					if (circleIntersectCircle(candidateCenter, candidateRadius, newPoint, rMin))
-					{
-						collision = true;
-						break;
-					}
-				}
+	//		bool collision = false;
+	//		for (const auto& candidate : candidates)
+	//		{
+	//			if (circleIntersectCircle(candidate->getCenter(), candidate->getRadius(),pos, objRadius))
+	//			{
+	//				collision = true;
+	//				break;
+	//			}
+	//		}
+	//		
+	//		if (!collision)
+	//		{
+	//			obj->setCenter(newPoint);
+	//			ObjectQuad data;
+	//			data.bounds = obj->getBounds();
+	//			data.obj = obj;
+	//			quadTree.insert(data);
+	//			return true;
+	//		}
+	//	}
 
-				if (!collision)
-				{
-					obj->setCenter(newPoint);
-					ObjectData data;
-					data.bounds = obj->getBounds();
-					data.id = obj->getID();
-					data.center = obj->getCenter();
-					data.radius = obj->getRadius();
-					quadTree.insert(data);
-					return true;
-				}
-			}
-		}
-		return false;
-		//float diametr = obj->getRadius() * 2;
-		//vector<FloatRect> occZones = quadTree.getAllBounds();
+	//	return false;
+	//	//float diametr = obj->getRadius() * 2;
+	//	//vector<FloatRect> occZones = quadTree.getAllBounds();
 
-		//vector<FloatRect> freeZones = computeFreeZones(quadTree.getBounds(),occZones);
-		///*for (const auto& zone : freeZones)
-		//{
-		//	std::cout << "Zone: (" << zone.left << ", " << zone.top << "), w=" << zone.width << ", h=" << zone.height << "\n";
-		//}*/
-		//
-		//freeZones.erase(remove_if(freeZones.begin(), freeZones.end(),
-		//	[diametr](const FloatRect& zone)
-		//	{
-		//		return zone.width < diametr + 2 * offsetSpawn || zone.height < diametr + 2 * offsetSpawn;;
-		//	}), freeZones.end());
+	//	//vector<FloatRect> freeZones = computeFreeZones(quadTree.getBounds(),occZones);
+	//	///*for (const auto& zone : freeZones)
+	//	//{
+	//	//	
+	//	//}*/
+	//	//
+	//	//freeZones.erase(remove_if(freeZones.begin(), freeZones.end(),
+	//	//	[diametr](const FloatRect& zone)
+	//	//	{
+	//	//		return zone.width < diametr + 2 * offsetSpawn || zone.height < diametr + 2 * offsetSpawn;;
+	//	//	}), freeZones.end());
 
-		//if (freeZones.empty())
-		//{
-		//	return false;
-		//}
+	//	//if (freeZones.empty())
+	//	//{
+	//	//	return false;
+	//	//}
 
-		//const int maxAttempsPerZone = 50;
-		//const int maxAttemps = 500;
-		//int attemps = 0;
+	//	//const int maxAttempsPerZone = 50;
+	//	//const int maxAttemps = 500;
+	//	//int attemps = 0;
 
-		//vector<int> zoneIndices(freeZones.size());
-		//iota(zoneIndices.begin(), zoneIndices.end(), 0);
-		//shuffle(zoneIndices.begin(), zoneIndices.end(), gen);
+	//	//vector<int> zoneIndices(freeZones.size());
+	//	//iota(zoneIndices.begin(), zoneIndices.end(), 0);
+	//	//shuffle(zoneIndices.begin(), zoneIndices.end(), gen);
 
-		//for (int zoneInd : zoneIndices)
-		//{
-		//	const FloatRect& zone = freeZones[zoneInd];
+	//	//for (int zoneInd : zoneIndices)
+	//	//{
+	//	//	const FloatRect& zone = freeZones[zoneInd];
 
-		//	float left = zone.left + obj->getRadius() + offsetSpawn;
-		//	float right = zone.left + zone.width  - obj->getRadius() - offsetSpawn ;
-		//	float top = zone.top + obj->getRadius() + offsetSpawn;
-		//	float bottom = zone.top + zone.height - obj->getRadius() - offsetSpawn;
+	//	//	float left = zone.left + obj->getRadius() + offsetSpawn;
+	//	//	float right = zone.left + zone.width  - obj->getRadius() - offsetSpawn ;
+	//	//	float top = zone.top + obj->getRadius() + offsetSpawn;
+	//	//	float bottom = zone.top + zone.height - obj->getRadius() - offsetSpawn;
 
-		//	
-		//	for (int attemp = 0; attemp < maxAttempsPerZone && attemps < maxAttemps; ++attemp, ++attemps)
-		//	{
-		//		float centerX = genNumber(left, right);
-		//		float centerY = genNumber(top, bottom);
+	//	//	
+	//	//	for (int attemp = 0; attemp < maxAttempsPerZone && attemps < maxAttemps; ++attemp, ++attemps)
+	//	//	{
+	//	//		float centerX = genNumber(left, right);
+	//	//		float centerY = genNumber(top, bottom);
 
-		//		bool isIntersect = quadTree.isIntersect({ centerX, centerY }, obj->getRadius());
-		//		if (!isIntersect)
-		//		{
-		//			obj->setCenter(centerX, centerY);
-		//			ObjectData data;
-		//			data.bounds = obj->getBounds();
-		//			data.center = obj->getCenter();
-		//			data.id = obj->getID();
-		//			data.radius = obj->getRadius();
-		//			quadTree.insert(data);
-		//			return true;
-		//		}
-		//
-		//	}
-		//}
-		//cout << "false\n";
-		//return false;
-	}
+	//	//		bool isIntersect = quadTree.isIntersect({ centerX, centerY }, obj->getRadius());
+	//	//		if (!isIntersect)
+	//	//		{
+	//	//			obj->setCenter(centerX, centerY);
+	//	//			ObjectData data;
+	//	//			data.bounds = obj->getBounds();
+	//	//			data.center = obj->getCenter();
+	//	//			data.id = obj->getID();
+	//	//			data.radius = obj->getRadius();
+	//	//			quadTree.insert(data);
+	//	//			return true;
+	//	//		}
+	//	//
+	//	//	}
+	//	//}
+	//	
+	//	//return false;
+	//}
 	void runServer(GameEngine& _Engine);
 }
 

@@ -14,7 +14,7 @@ public:
 	void TimeElapsed(int diff) override;
 	void setSplitted(bool splitted);
 	bool isSplitted() const;
-	void setPosMouse(float x, float y);
+	Vector2f getDirection() const;
 	void draw(RenderWindow& window) const override;
 	void setCenter(Vector2f newCenter) override;
 	void shiftPos(float offsetX = 0, float offsetY = 0) override;
@@ -23,5 +23,5 @@ protected:
 	/*void pieceToSides();*/
 	CircleShape _shape;
 	Text name;
-	bool m_Splitted;	
+	bool m_Splitted = false;	
 };

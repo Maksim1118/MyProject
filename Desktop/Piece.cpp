@@ -14,8 +14,26 @@ Piece::Piece(Vector2f center, float  radius, int Col, string id, const string& p
 
 void Piece::TimeElapsed(int diff)
 {
+
+	/*float len = GetLen(Mouse);
+	float radius = getRadius();
+
+	float localMaxV = maxV;
+
+	if (len < radius)
+	{
+		localMaxV *= (len / radius);
+	}
+
+	Vector2f d = getIdentityVector(Mouse);
+	Vector2f f = calcAttractionForce(d, 0.3f);
+	Vector2f a = calcAcceleration(f, m_mass);
+	V = calcSpeed(V, a, diff, localMaxV, 1.f);*/
+
 	MoveObject::TimeElapsed(diff);
 	_shape.setRadius(_radius);
+	_shape.setPosition(Center.x - _radius, Center.y - _radius);
+	/*cout << "CenterPiece: " << Center.x << " " << Center.y << endl;*/
 }
 
 void Piece::draw(RenderWindow& window) const
@@ -47,17 +65,6 @@ bool Piece::isExclude() const
 {
 	return m_isExcluded;
 }
-
-float Piece::getMaxV()
-{
-	return maxV;
-}
-
-void Piece::setMaxV(float newMaxV)
-{
-	maxV = newMaxV;
-}
-
 
 void Piece::setCenter(Vector2f newCenter)
 {

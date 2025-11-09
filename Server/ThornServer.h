@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "ObjectsServer.h"
-#include "BotServer.h"
+#include "Respawn.h"
 
 using namespace sf;
 using namespace std;
@@ -13,16 +13,18 @@ namespace Server
 	constexpr float _ThornSpriteMass = 2500.f;
 	const float _ThornSpriteR = sqrt(_ThornSpriteMass);
 
-	class Thorn : public Objects
+	class Thorn : public Objects, public Respawn
 	{
 	public:
-		Thorn();
+		Thorn(IRegistrator* iRegistrator);
+		bool Eat(Objects& obj) override;
+		bool checkEaten(Objects& eatingObj) override;
+		/*nlohmann::json toJson()  override;*/
 		void TimeElapsed(int diff);
-		void update(int diff);
-		bool checkEaten(MoveObject* obj) override;
-		void setEatenState() override;
 	private:
-		int elapsedRespTime;
+		nlohmann::json toStaticJson() const override;
+		nlohmann::json toPersistentJson() const override;
+		void respawn() override;
 	};
 }
 

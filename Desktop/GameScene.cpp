@@ -23,8 +23,8 @@ constexpr float minMassForScale = 400.00f;
 constexpr float maxScale = 1.00f;
 constexpr float minScale = 2.00f;
 
-void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer, GameScene::Map & map);
-void fillBot(const nlohmann::json& obj, Bot* & bot, GameScene::Map& map);
+void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer);
+void fillBot(const nlohmann::json& obj, Bot* & bot);
 void fillPiece(const nlohmann::json& obj,Piece* & piece);
 void fillFeed(const nlohmann::json& obj, Feed* & feed);
 void fillFood(const nlohmann::json& obj, Food* & food);
@@ -75,10 +75,10 @@ void requestMainInfo(GameScene::Map & map, segmentInterval& segInterval, unorder
 		else
 		{
 			
-			{
+		/*	{
 				lock_guard lock(m);
 				requestViewInfo(map.camera, *map.LocalPlayer);
-			}
+			}*/
 			
 			{
 				lock_guard lock(m);
@@ -163,37 +163,98 @@ void requestMainInfo(GameScene::Map & map, segmentInterval& segInterval, unorder
 				}
 			}*/
 
-			if (response.contains("ListPieces"))
-			{
-				for (auto& [id, piecePtr] : map.ListPieces)
-				{
-					piecePtr->m_isMarked = true;
-				}
+			unordered_set<string> currentIds;
 
-				for (const auto& p : response["ListPieces"])
+			if (response.contains("listObjects"))
+			{
+				for (const auto& obj : response["listObjects"])
 				{
-					string pieceId = p["id"].get<string>();
-					auto& insert_piece = map.ListPieces.insert(make_pair(pieceId, nullptr));
-					if (insert_piece.second)
+					int typeInt = obj["Type"];
+					string id = obj["id"];
+
+					currentIds.insert(id);
+					ObjectsType type = static_cast<ObjectsType>(typeInt);
+
+					if (type == ObjectsType::FOOD)
 					{
-						Piece* piece = createPiece(p);
-						piece->m_isMarked = false;
-						insert_piece.first->second = piece;
-						map.insertInObjectsList(piece);
+						
+						auto it = map.ListFoods.find(id);
+						if (it == map.ListFoods.end())
+						{
+							Food* food = createFood(obj);
+							map.ListFoods[id] = food;
+							map.insertInObjectsList(food);
+						}
+						else
+						{
+							fillFood(obj, it->second);
+						}
 					}
-					else
+					else if (type == ObjectsType::THORN) 
 					{
-						fillPiece(p, insert_piece.first->second);
-						insert_piece.first->second->m_isMarked = false;
+						auto it = map.ListThorns.find(id);
+						if (it == map.ListThorns.end())
+						{
+							Thorn* thorn = createThorn(obj);
+							map.ListThorns[id] = thorn;
+							map.insertInObjectsList(thorn);
+						}
+						else
+						{
+							fillThorn(obj, it->second);
+						}
+					}
+					else if (type == ObjectsType::PIECE)
+					{
+						auto it = map.ListPieces.find(id);
+						if (it == map.ListPieces.end())
+						{
+							Piece* piece = createPiece(obj);
+							map.ListPieces[id] = piece;
+							map.insertInObjectsList(piece);
+						}
+						else
+						{
+							fillPiece(obj, it->second);
+						}
+					}
+					else if (type == ObjectsType::BOT)
+					{
+						auto it = map.ListBots.find(id);
+						if (it == map.ListBots.end())
+						{
+							Bot* bot = createBot(obj);
+							map.ListBots[id] = bot;
+							map.insertInObjectsList(bot);
+						}
+						else
+						{
+							fillBot(obj, it->second);
+						}
+					}
+					else if (type == ObjectsType::PLAYER)
+					{
+						auto it = map.ListPlayers.find(id);
+						if (it == map.ListPlayers.end())
+						{
+							Hero* hero = createPlayer(obj);
+							map.ListPlayers[id] = hero;
+							map.insertInObjectsList(hero);
+						}
+						else
+						{
+							fillHero(obj, it->second);
+							
+						}
 					}
 				}
 			}
-			for (auto it = map.ListPieces.begin(); it != map.ListPieces.end();)
-			{
-				if (it->second->m_isMarked)
+
+			for (auto it = map.objects.begin(); it != map.objects.end(); )
+			{		
+				if (currentIds.find((*it)->getID()) == currentIds.end())
 				{
-					map.ListOldId.insert(it->first);
-					it = map.ListPieces.erase(it);
+					it = map.objects.erase(it);
 				}
 				else
 				{
@@ -201,207 +262,249 @@ void requestMainInfo(GameScene::Map & map, segmentInterval& segInterval, unorder
 				}
 			}
 
-			if (response.contains("ListHeroes"))
-			{
-				for (auto& [id, playerPtr] : map.ListPlayers)
-				{
-					playerPtr->m_isMarked = true;
-				}
-
-				for (const auto& jsonHero: response["ListHeroes"])
-				{
-					string playerId = jsonHero["id"].get<string>();
-					auto& insert_res = map.ListPlayers.insert(make_pair(playerId, nullptr));
-					if (insert_res.second)
-					{
-						Hero* player = createPlayer(jsonHero);
-						player->m_isMarked = false;
-						insert_res.first->second = player;
-						map.insertInObjectsList(player);
-					}
-					else
-					{	
-						fillHero(jsonHero, insert_res.first->second, map);
-						insert_res.first->second->m_isMarked = false;
-						/*if (insert_res.first->second->isSplitted())
-						{
-							insert_res.first->second->m_isMarked = true;
-						}
-						else
-						{
-							insert_res.first->second->m_isMarked = false;
-						}*/
-					}
-					
-				}
-
-				for (auto it = map.ListPlayers.begin(); it != map.ListPlayers.end();)
-				{
-					if (it->second->m_isMarked)
-					{
-						map.ListOldId.insert(it->first);
-						it = map.ListPlayers.erase(it);
-					}
-					else
-					{
-						++it;
-					}
-				}
-				
-			}
-				
-			if (response.contains("ListFoods"))
-			{
-				for (auto& [id, foodPtr] : map.ListFoods)
-				{
-					foodPtr->m_isMarked = true;
-				}
-
-				for (const auto& f : response["ListFoods"])
-				{
-					string FoodId = f["id"].get<string>();
-					auto& insert_res = map.ListFoods.insert(make_pair(FoodId, nullptr));
-					if (insert_res.second)
-					{
-						Food* food = createFood(f);
-						food->m_isMarked = false;
-						insert_res.first->second = food;
-						map.insertInObjectsList(food);
-					}
-					else
-					{
-						fillFood(f, insert_res.first->second);
-						insert_res.first->second->m_isMarked = false;
-					}
-				}
-
-				for (auto it = map.ListFoods.begin(); it != map.ListFoods.end();)
-				{
-					if (it->second->m_isMarked)
-					{
-						map.ListOldId.insert(it->first);
-						it = map.ListFoods.erase(it);
-					}
-					else
-					{
-						++it;
-					}
-				}
-			}
-
-			if (response.contains("ListBots"))
-			{
-				for (auto& [id, playerPtr] : map.ListBots)
-				{
-					playerPtr->m_isMarked = true;
-				}
-
-				for (const auto& jsonBot : response["ListBots"])
-				{
-					string botId = jsonBot["id"].get<string>();
-					auto& insert_res = map.ListBots.insert(make_pair(botId, nullptr));
-					if (insert_res.second)
-					{
-						Bot* bot = createPlayer(jsonBot);
-						bot->m_isMarked = false;
-						insert_res.first->second = bot;
-						map.insertInObjectsList(bot);
-					}
-					else
-					{
-						fillBot(jsonBot, insert_res.first->second, map);
-						insert_res.first->second->m_isMarked = false;
-						/*if (insert_res.first->second->isSplitted())
-						{
-							insert_res.first->second->m_isMarked = true;
-						}
-						else
-						{
-							insert_res.first->second->m_isMarked = false;
-						}*/
-					}
-
-				}
-
-				for (auto it = map.ListBots.begin(); it != map.ListBots.end();)
-				{
-					if (it->second->m_isMarked)
-					{
-						map.ListOldId.insert(it->first);
-						it = map.ListBots.erase(it);
-					}
-					else
-					{
-						++it;
-					}
-				}
-
-			}
-
-			if (response.contains("ListThorns"))
-			{
-				for (auto& [id, thornPtr] : map.ListThorns)
-				{
-					thornPtr->m_isMarked = true;
-				}
-
-				for (const auto& t : response["ListThorns"])
-				{
-					string thornId = t["id"].get<string>();
-					auto& insert_res = map.ListThorns.insert(make_pair(thornId, nullptr));
-					if (insert_res.second)
-					{
-						Thorn* thorn = createThorn(t);
-						thorn->m_isMarked = false;
-						insert_res.first->second = thorn;
-						map.insertInObjectsList(thorn);
-					}
-					else
-					{
-						fillThorn(t, insert_res.first->second);
-						insert_res.first->second->m_isMarked = false;
-					}
-				}
-
-				for (auto it = map.ListThorns.begin(); it != map.ListThorns.end();)
-				{
-					if (it->second->m_isMarked)
-					{
-						map.ListOldId.insert(it->first);
-						it = map.ListThorns.erase(it);
-					}
-					else
-					{
-						++it;
-					}
-				}
-			}
-
-	
-
-			for (auto it = map.objects.begin(); it != map.objects.end();)
-			{
-				string objID = (*it)->getID();
-				if (find(map.ListOldId.begin(), map.ListOldId.end(),
-					(*it)->getID()) != map.ListOldId.end())
-				{
-					if (map.LocalPlayer != nullptr && (*it)->getID() != map.LocalPlayer->getID())
-					{
-						delete* it;
-						it = map.objects.erase(it);
-						map.ListOldId.erase(objID);
-					}
-				}
-				else
-				{
-					++it;
-				}
-			}
+			
 
 			timSort<Objects>(map.objects, [](const Objects* a, const Objects* b)
 				{
 					return a->getRadius() < b->getRadius();
 				});
+
+			//if (response.contains("ListPieces"))
+			//{
+			//	for (auto& [id, piecePtr] : map.ListPieces)
+			//	{
+			//		piecePtr->m_isMarked = true;
+			//	}
+
+			//	for (const auto& p : response["ListPieces"])
+			//	{
+			//		string pieceId = p["id"].get<string>();
+			//		auto& insert_piece = map.ListPieces.insert(make_pair(pieceId, nullptr));
+			//		if (insert_piece.second)
+			//		{
+			//			Piece* piece = createPiece(p);
+			//			piece->m_isMarked = false;
+			//			insert_piece.first->second = piece;
+			//			map.insertInObjectsList(piece);
+			//		}
+			//		else
+			//		{
+			//			fillPiece(p, insert_piece.first->second);
+			//			insert_piece.first->second->m_isMarked = false;
+			//		}
+			//	}
+			//}
+			//for (auto it = map.ListPieces.begin(); it != map.ListPieces.end();)
+			//{
+			//	if (it->second->m_isMarked)
+			//	{
+			//		map.ListOldId.insert(it->first);
+			//		it = map.ListPieces.erase(it);
+			//	}
+			//	else
+			//	{
+			//		++it;
+			//	}
+			//}
+
+			//if (response.contains("ListHeroes"))
+			//{
+			//	for (auto& [id, playerPtr] : map.ListPlayers)
+			//	{
+			//		playerPtr->m_isMarked = true;
+			//	}
+
+			//	for (const auto& jsonHero: response["ListHeroes"])
+			//	{
+			//		string playerId = jsonHero["id"].get<string>();
+			//		auto& insert_res = map.ListPlayers.insert(make_pair(playerId, nullptr));
+			//		if (insert_res.second)
+			//		{
+			//			Hero* player = createPlayer(jsonHero);
+			//			player->m_isMarked = false;
+			//			insert_res.first->second = player;
+			//			map.insertInObjectsList(player);
+			//		}
+			//		else
+			//		{	
+			//			fillHero(jsonHero, insert_res.first->second, map);
+			//			insert_res.first->second->m_isMarked = false;
+			//			/*if (insert_res.first->second->isSplitted())
+			//			{
+			//				insert_res.first->second->m_isMarked = true;
+			//			}
+			//			else
+			//			{
+			//				insert_res.first->second->m_isMarked = false;
+			//			}*/
+			//		}
+			//		
+			//	}
+
+			//	for (auto it = map.ListPlayers.begin(); it != map.ListPlayers.end();)
+			//	{
+			//		if (it->second->m_isMarked)
+			//		{
+			//			map.ListOldId.insert(it->first);
+			//			it = map.ListPlayers.erase(it);
+			//		}
+			//		else
+			//		{
+			//			++it;
+			//		}
+			//	}
+			//	
+			//}
+			//	
+			//if (response.contains("ListFoods"))
+			//{
+			//	for (auto& [id, foodPtr] : map.ListFoods)
+			//	{
+			//		foodPtr->m_isMarked = true;
+			//	}
+
+			//	for (const auto& f : response["ListFoods"])
+			//	{
+			//		string FoodId = f["id"].get<string>();
+			//		auto& insert_res = map.ListFoods.insert(make_pair(FoodId, nullptr));
+			//		if (insert_res.second)
+			//		{
+			//			Food* food = createFood(f);
+			//			food->m_isMarked = false;
+			//			insert_res.first->second = food;
+			//			map.insertInObjectsList(food);
+			//		}
+			//		else
+			//		{
+			//			fillFood(f, insert_res.first->second);
+			//			insert_res.first->second->m_isMarked = false;
+			//		}
+			//	}
+
+			//	for (auto it = map.ListFoods.begin(); it != map.ListFoods.end();)
+			//	{
+			//		if (it->second->m_isMarked)
+			//		{
+			//			map.ListOldId.insert(it->first);
+			//			it = map.ListFoods.erase(it);
+			//		}
+			//		else
+			//		{
+			//			++it;
+			//		}
+			//	}
+			//}
+
+			//if (response.contains("ListBots"))
+			//{
+			//	for (auto& [id, playerPtr] : map.ListBots)
+			//	{
+			//		playerPtr->m_isMarked = true;
+			//	}
+
+			//	for (const auto& jsonBot : response["ListBots"])
+			//	{
+			//		string botId = jsonBot["id"].get<string>();
+			//		auto& insert_res = map.ListBots.insert(make_pair(botId, nullptr));
+			//		if (insert_res.second)
+			//		{
+			//			Bot* bot = createPlayer(jsonBot);
+			//			bot->m_isMarked = false;
+			//			insert_res.first->second = bot;
+			//			map.insertInObjectsList(bot);
+			//		}
+			//		else
+			//		{
+			//			fillBot(jsonBot, insert_res.first->second, map);
+			//			insert_res.first->second->m_isMarked = false;
+			//			/*if (insert_res.first->second->isSplitted())
+			//			{
+			//				insert_res.first->second->m_isMarked = true;
+			//			}
+			//			else
+			//			{
+			//				insert_res.first->second->m_isMarked = false;
+			//			}*/
+			//		}
+
+			//	}
+
+			//	for (auto it = map.ListBots.begin(); it != map.ListBots.end();)
+			//	{
+			//		if (it->second->m_isMarked)
+			//		{
+			//			map.ListOldId.insert(it->first);
+			//			it = map.ListBots.erase(it);
+			//		}
+			//		else
+			//		{
+			//			++it;
+			//		}
+			//	}
+
+			//}
+
+			//if (response.contains("ListThorns"))
+			//{
+			//	for (auto& [id, thornPtr] : map.ListThorns)
+			//	{
+			//		thornPtr->m_isMarked = true;
+			//	}
+
+			//	for (const auto& t : response["ListThorns"])
+			//	{
+			//		string thornId = t["id"].get<string>();
+			//		auto& insert_res = map.ListThorns.insert(make_pair(thornId, nullptr));
+			//		if (insert_res.second)
+			//		{
+			//			Thorn* thorn = createThorn(t);
+			//			thorn->m_isMarked = false;
+			//			insert_res.first->second = thorn;
+			//			map.insertInObjectsList(thorn);
+			//		}
+			//		else
+			//		{
+			//			fillThorn(t, insert_res.first->second);
+			//			insert_res.first->second->m_isMarked = false;
+			//		}
+			//	}
+
+			//	for (auto it = map.ListThorns.begin(); it != map.ListThorns.end();)
+			//	{
+			//		if (it->second->m_isMarked)
+			//		{
+			//			map.ListOldId.insert(it->first);
+			//			it = map.ListThorns.erase(it);
+			//		}
+			//		else
+			//		{
+			//			++it;
+			//		}
+			//	}
+			//}
+
+	
+
+			//for (auto it = map.objects.begin(); it != map.objects.end();)
+			//{
+			//	string objID = (*it)->getID();
+			//	if (find(map.ListOldId.begin(), map.ListOldId.end(),
+			//		(*it)->getID()) != map.ListOldId.end())
+			//	{
+			//		if (map.LocalPlayer != nullptr && (*it)->getID() != map.LocalPlayer->getID())
+			//		{
+			//			delete* it;
+			//			it = map.objects.erase(it);
+			//			map.ListOldId.erase(objID);
+			//		}
+			//	}
+			//	else
+			//	{
+			//		++it;
+			//	}
+			//}
+
+		
 			/*if (response.contains("ListFeeds"))
 			{
 				unordered_set<string> newFeeds;
@@ -648,85 +751,85 @@ void GameScene::Map::pieceToSides()
 }
 
 
-Vector2f GameScene::Map::calcAttractionForcePiece(Piece* &piece, const Vector2f& mousePos)
-{
-	Vector2f F(0, 0);
-	Vector2f center = piece->getCenter();
-	Vector2f dir = mousePos - center;
-	F += MoveObject::identityVector(dir);
+//Vector2f GameScene::Map::calcAttractionForcePiece(Piece* &piece, const Vector2f& mousePos)
+//{
+//	Vector2f F(0, 0);
+//	Vector2f center = piece->getCenter();
+//	Vector2f dir = mousePos - center;
+//	F += MoveObject::identityVector(dir);
+//
+//	const auto& parentId = piece->getParentID();
+//
+//	for (auto& piece2 : ListPieces) 
+//	{
+//		
+//		if (piece == piece2.second) 
+//		{
+//			continue;
+//		}
+//
+//		const auto& parentId2 = piece2.second->getParentID();
+//		if (parentId != parentId2)
+//		{
+//			continue;
+//		}
+//
+//		float lenPiece2 = MoveObject::GetLen(piece->getCenter(), piece2.second->getCenter(), size);
+//		float sumRadius = piece->getRadius() + piece2.second->getRadius();
+//		float minDist = sumRadius * 2;
+//		/*if (lenPiece2 > sumRadius)
+//		{
+//			Vector2f toPiece21 = getIdentityVector(piece2.second->getCenter() - center);
+//			F += toPiece21 * (float)0.01;
+//		}*/
+//		if (lenPiece2 > minDist)
+//		{
+//			Vector2f toPiece21 = MoveObject::identityVector(piece2.second->getCenter() - center);
+//			float excess = lenPiece2 - minDist;
+//			float strength = pow(excess, 3) * 0.0005f;
+//
+//			F += toPiece21 * strength;
+//		}
+//	}
+//	return F;
+//}
+//
+//
+//Vector2f GameScene::Map::calcAccelerationPiece(const Vector2f& F, Piece* & piece)
+//{
+//	float mass = piece->getMass();
+//	if (mass == 0.f)
+//	{
+//		return { 0.f, 0.f };
+//	}
+//
+//	Vector2f a = F / mass;
+//	float lenA = MoveObject::GetLen(a);
+//	float maxA = 2.0 / mass;
+//	if (lenA > maxA) {
+//		a = a / lenA * (float)maxA;
+//	}
+//	return a;
+//}
 
-	const auto& parentId = piece->getParentID();
-
-	for (auto& piece2 : ListPieces) 
-	{
-		
-		if (piece == piece2.second) 
-		{
-			continue;
-		}
-
-		const auto& parentId2 = piece2.second->getParentID();
-		if (parentId != parentId2)
-		{
-			continue;
-		}
-
-		float lenPiece2 = MoveObject::GetLen(piece->getCenter(), piece2.second->getCenter(), size);
-		float sumRadius = piece->getRadius() + piece2.second->getRadius();
-		float minDist = sumRadius * 2;
-		/*if (lenPiece2 > sumRadius)
-		{
-			Vector2f toPiece21 = getIdentityVector(piece2.second->getCenter() - center);
-			F += toPiece21 * (float)0.01;
-		}*/
-		if (lenPiece2 > minDist)
-		{
-			Vector2f toPiece21 = MoveObject::identityVector(piece2.second->getCenter() - center);
-			float excess = lenPiece2 - minDist;
-			float strength = pow(excess, 3) * 0.0005f;
-
-			F += toPiece21 * strength;
-		}
-	}
-	return F;
-}
-
-
-Vector2f GameScene::Map::calcAccelerationPiece(const Vector2f& F, Piece* & piece)
-{
-	float mass = piece->getMass();
-	if (mass == 0.f)
-	{
-		return { 0.f, 0.f };
-	}
-
-	Vector2f a = F / mass;
-	float lenA = MoveObject::GetLen(a);
-	float maxA = 2.0 / mass;
-	if (lenA > maxA) {
-		a = a / lenA * (float)maxA;
-	}
-	return a;
-}
-
-Vector2f GameScene::Map::calcSpeedPiece(const Vector2f& a, const Vector2f& mousePos, int diff,  Piece* & piece)
-{
-	Vector2f v{ 0.f,0.f };
-	v = piece->getSpeed() + a * (float)diff * 1.f;
-	float lenV = MoveObject::GetLen(v);
-	float maxV = piece->getMaxV();
-	/*float lenMouse = GetDist(_Mouse,getCenter());*/
-	float lenMouse = MoveObject::GetLen(mousePos, piece->getCenter(), size);
-	if (lenMouse < 40.f)
-	{
-		maxV *= (lenMouse / 40.f);
-	}
-	if (lenV > maxV) {
-		/*v *= (float)maxV / lenV;*/
-		v = v / lenV * maxV;
-	}
-	return v;
-}
+//Vector2f GameScene::Map::calcSpeedPiece(const Vector2f& a, const Vector2f& mousePos, int diff,  Piece* & piece)
+//{
+//	Vector2f v{ 0.f,0.f };
+//	v = piece->getSpeed() + a * (float)diff * 1.f;
+//	float lenV = MoveObject::GetLen(v);
+//	float maxV = piece->getMaxV();
+//	/*float lenMouse = GetDist(_Mouse,getCenter());*/
+//	float lenMouse = MoveObject::GetLen(mousePos, piece->getCenter(), size);
+//	if (lenMouse < 40.f)
+//	{
+//		maxV *= (lenMouse / 40.f);
+//	}
+//	if (lenV > maxV) {
+//		/*v *= (float)maxV / lenV;*/
+//		v = v / lenV * maxV;
+//	}
+//	return v;
+//}
 
 
 void GameScene::Map::fillListObjects()
@@ -760,11 +863,11 @@ void GameScene::Map::fillListObjects()
 
 void GameScene::Map::insertInObjectsList(Objects* obj)
 {
-	auto pos = findPos<Objects>(objects, obj, [](const Objects* a, const Objects* b)
+	/*auto pos = findPos<Objects>(objects, obj, [](const Objects* a, const Objects* b)
 		{
 			return a->getRadius() < b->getRadius();
-		});
-	objects.insert(pos, obj);
+		});*/
+	objects.push_back(obj);
 }
 
 void getRequest(const nlohmann::json& request)
@@ -818,18 +921,37 @@ void GameScene::HandleEvent(Event& event)
 			nlohmann::json response = message.process(request);
 		}*/
 	}
-	if (event.type == sf::Event::MouseMoved)
+	/*if (event.type == sf::Event::MouseMoved)
 	{
-		if(m_Map.LocalPlayer != nullptr)
-			m_Map.LocalPlayer->setPosMouse(m_MousePos.x, m_MousePos.y);
-	}
+		
+	}*/
+		
 }
 
 void GameScene::TimeElapsed(int& diff)
 {
 	PastTime time;
-	
-	
+
+	if (m_Map.LocalPlayer != nullptr)
+	{
+		Vector2f dir = m_Map.LocalPlayer->GetCyclicDiff(m_Map.LocalPlayer->getCenter(), m_MousePos, 2500, 2500);
+		m_Map.LocalPlayer->setDirection(dir);
+	}
+
+	if (!m_Map.ListPieces.empty())
+	{
+		for (auto& piece : m_Map.ListPieces)
+		{
+			if (m_Map.LocalPlayer)
+			{
+				if (piece.second->getParentID()  == m_Map.LocalPlayer->getID())
+				{
+					Vector2f dir = m_Map.LocalPlayer->GetCyclicDiff(piece.second->getCenter(), m_MousePos, 2500, 2500);
+					piece.second->setDirection(dir);
+				}
+			}	
+		}
+	}
 
 	timer += diff;
 	if (timer > 100)
@@ -839,16 +961,15 @@ void GameScene::TimeElapsed(int& diff)
 			nlohmann::json request;
 			request["action"] = "ask pos mouse";
 			request["Id"] = m_Map.LocalPlayer->getID();
-			request["mousePosition"] = { {"x",(int)m_MousePos.x}, {"y", (int)m_MousePos.y} };
+
+			request["mousePosition"] = { {"x", m_MousePos.x}, {"y", m_MousePos.y}};
 			sendMessage(request);
 		}
 		timer = 0;
 	}
 	time.update();
-	cout << "mouse: " << time.getDeltaTime() << endl;
 	lock_guard lock(m);
 	time.update();
-	cout << "mutexLock: " << time.getDeltaTime() << endl;
 	/*for (auto& piece : m_Map.ListPieces)
 	{
 		Vector2f F = m_Map.calcAttractionForcePiece(piece.second, posMouse);
@@ -857,16 +978,17 @@ void GameScene::TimeElapsed(int& diff)
 		piece.second->setSpeed(v);
 	}*/
 	m_Map.pieceToSides();
-	m_Map.camera.updateZoom(diff);
+	/*m_Map.camera.updateZoom(diff);*/
 	for (const auto& o : m_Map.objects)
 	{
 		if(o->m_IsLive)
 			o->TimeElapsed(diff);
 	}
+
+	
 	if(m_Map.LocalPlayer)
 		m_Map.camera.updateView(m_Map.LocalPlayer->getCenter());
 	time.update();
-	cout << "objectsTimeElapsed: " << time.getDeltaTime() << endl;
 
 	/*cameraUpdate(diff);*/
 	
@@ -954,7 +1076,7 @@ Piece* createPiece(nlohmann::json obj)
 {
 	Piece* piece = new Piece(Vector2f(obj["Center"]["x"], obj["Center"]["y"]), obj["Radius"].get<float>(), obj["Color"].get<int>(), obj["id"].get<string>(), obj["ParentId"].get<string>());
 	piece->setMass(obj["Mass"].get<float>());
-	piece->setExclude(obj["isExcluded"].get<bool>());
+	//piece->setExclude(obj["isExcluded"].get<bool>());
 	return piece;
 }
 
@@ -988,11 +1110,12 @@ Bot* createBot(nlohmann::json obj)
 
 void fillPiece(const nlohmann::json& obj, Piece* & piece)
 {
-	piece->setMaxV(obj["maxV"]);
+	//piece->setMaxV(obj["maxV"]);
 	piece->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
 	piece->setRadius(obj["Radius"]);
 	piece->setMass(obj["Mass"].get<float>());
-	piece->setExclude(obj["isExcluded"].get<bool>());
+	piece->setMaxV(obj["MaxV"].get<float>());
+	/*piece->setExclude(obj["isExcluded"].get<bool>());*/
 	piece->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - piece->getCenter());
 }
 
@@ -1006,9 +1129,9 @@ void fillFeed(const nlohmann::json& obj, Feed* & feed)
 	feed->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - feed->getCenter());
 }
 
-void fillBot(const nlohmann::json& obj, Bot* & bot, GameScene::Map& map)
+void fillBot(const nlohmann::json& obj, Bot* & bot)
 {
-	bot->setSplitted(obj["Splitted"].get<bool>());
+	/*bot->setSplitted(obj["Splitted"].get<bool>());*/
 	bot->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
 	bot->setRadius(obj["Radius"]);
 	bot->setMass(obj["Mass"].get<float>());
@@ -1112,7 +1235,7 @@ void fillThorn(const nlohmann::json& obj, Thorn* & thorn)
 	thorn->setCenter(Vector2f(obj["Center"]["x"].get<float>(), obj["Center"]["y"].get<float>()));
 }
 
-void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer, GameScene::Map& map)
+void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer)
 {
 	/*auto itHero = find_if(m.begin(), objects.end(), [heroId](const shared_ptr<Objects>& o)
 		{
@@ -1123,6 +1246,7 @@ void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer, GameScene::Map& ma
 	LocalPlayer->setSpeed(Vector2f(obj["Speed"]["x"], obj["Speed"]["y"]));
 	LocalPlayer->setRadius(obj["Radius"].get<float>());
 	LocalPlayer->setMass(obj["Mass"].get<float>());
+	LocalPlayer->setMaxV(obj["MaxV"].get<float>());
 	/*LocalPlayer->setCurrentMass(static_cast<float>(obj["Mass"]));*/
 	LocalPlayer->setDifference(Vector2f(obj["Center"]["x"], obj["Center"]["y"]) - LocalPlayer->getCenter());
 	LocalPlayer->m_IsGameOver = obj["GameOver"];
@@ -1159,10 +1283,11 @@ void fillHero(const nlohmann::json& obj, Hero* & LocalPlayer, GameScene::Map& ma
 }
 
 void GameScene::draw(RenderWindow& window)
-{	
+{
 	lock_guard lock(m);
 	/*m_LocalCamera.updateSize((Vector2f)window.getSize());*/
-	window.setView(m_Map.camera.getView());
+
+	/*window.setView(m_Map.camera.getView());
 
 	{
 		int tilesX = static_cast<int>(ceil(m_Map.camera.getView().getSize().x / fieldBGSprite.getLocalBounds().width)) + 2;
@@ -1179,32 +1304,43 @@ void GameScene::draw(RenderWindow& window)
 				window.draw(fieldBGSprite);
 			}
 		}
-	}
+	}*/
+
+
+	if (m_Map.LocalPlayer)
+		m_view.setCenter(m_Map.LocalPlayer->getCenter());
+
+	window.setView(m_view);
 
 	for (const auto& obj : m_Map.objects)
 	{
-		if (obj)
-		{
-			if (obj == m_Map.LocalPlayer)
-			{
-				obj->shiftPos();
-				obj->draw(window);
-			}
-			else
-			{
-
-				for (int i = -1; i <= 1; ++i)
-				{
-					for (int j = -1; j <= 1; ++j)
-					{
-						obj->shiftPos(m_Map.size.x * i, m_Map.size.y * j);
-						obj->draw(window);
-					}
-				}
-			}
-		}
-	
+		obj->draw(window);
 	}
+
+	//for (const auto& obj : m_Map.objects)
+	//{
+	//	if (obj)
+	//	{
+	//		if (obj == m_Map.LocalPlayer)
+	//		{
+	//			/*obj->shiftPos();*/
+	//			obj->draw(window);
+	//		}
+	//		else
+	//		{
+
+	//			for (int i = -1; i <= 1; ++i)
+	//			{
+	//				for (int j = -1; j <= 1; ++j)
+	//				{
+	//					/*obj->shiftPos(m_Map.size.x * i, m_Map.size.y * j);*/
+	//					obj->draw(window);
+	//				}
+	//			}
+	//		}
+	//	}
+	//
+	//}
 	
 
 	if(m_Map.LocalPlayer)

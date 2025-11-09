@@ -1,47 +1,69 @@
 #include "FoodServer.h"
+
+#include "IRegistrator.h"
+
 #include "MoveObjectServer.h"
+
+#include "Generator.h"
+#include "Constants.h"
 
 constexpr int RESPAWN_TIME = 3000;
 
 namespace Server
 {
-	Food::Food() : Objects(Vector2f(0.f, 0.f), _FoodMass), respawnTime(10000), elapsedRespTime(0), m_isRespawnState(false)
+	Food::Food(IRegistrator* iRegistrator) : Objects(iRegistrator, Vector2f(0.f, 0.f), GameConstants::FOOD_MASS), Respawn(RESPAWN_TIME)
 	{
+		type = ObjectType::FOOD;
+		m_state = ObjectState::Respawnable;
 		m_ListColors = getFoodColors();
-		m_ColorIndex = rand() % (m_ListColors.size() - 1);
+		m_ColorIndex = genNumber<size_t>(0, m_ListColors.size() - 1);
 	}
 
-	void Food::TimeElapsed(int diff)
+	bool Food::checkEaten(Objects& eatingObj)
 	{
-		if (state == States::READY_TO_RESPAWN)
-		{
-			update(diff);
-		}
-	}
-
-	void Food::update(int diff)
-	{
-		elapsedRespTime += diff;
-		if (elapsedRespTime >= RESPAWN_TIME)
-		{
-			state = States::READY_TO_LIVE;
-			elapsedRespTime = 0;
-		}
-	}
-
-	bool Food::checkEaten(MoveObject* obj)
-	{
-		if (!isLive() || !obj->isLive())
+		if (!active || !eatingObj.isActive())
 			return false;
-		if (obj->Eating((*this), -getRadius()))
+		if (eatingObj.Eating((*this), -getRadius()))
 		{
-			setEatenState();
+			Respawn::reset();
+			registrator->unregisterAuxiliary(shared_from_this());
+			active = false;
 			return true;
 		}
 		return false;
 	}
-	void Food::setEatenState()
+
+	bool Food::Eat(Objects& obj)
 	{
-		state = States::READY_TO_RESPAWN;
+		return false; //can't eat;
+	}
+
+	void Food::TimeElapsed(int diff)
+	{
+		if (!active)
+		{
+			Respawn::update(diff);
+			if (Respawn::isReady())
+			{
+				respawn();
+			}
+		}
+	}
+
+	void Food::respawn()
+	{
+		if (registrator->spawn(getRadius(), _center))
+		{
+			registrator->registerAuxiliary(shared_from_this());
+			active = true;
+		}
+	}
+	nlohmann::json Food::toStaticJson() const
+	{
+		return nlohmann::json();
+	}
+	nlohmann::json Food::toPersistentJson() const
+	{
+		return nlohmann::json();
 	}
 }

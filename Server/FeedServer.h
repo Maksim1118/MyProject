@@ -7,13 +7,17 @@ namespace Server
 	class Feed : public MoveObject
 	{
 	public:
-		Feed();
+		Feed(IRegistrator* iRegistrator);
+		bool Eat(Objects& obj) override;
+		bool checkEaten(Objects& eatingObj) override;
 		void TimeElapsed(int diff);
 		void setV(Vector2f& newV);
 		void setParentCenter(Vector2f& newCenter);
 		void setParentRadius(float newRadius);
-		bool checkEaten(MoveObject* obj) override;
-		void setEatenState() override;
+	/*	void setEatenState() override;*/
+	private:
+		nlohmann::json toStaticJson() const override;
+		nlohmann::json toPersistentJson() const override;
 	private:
 		Vector2f parentCenter;
 		float parentRadius;

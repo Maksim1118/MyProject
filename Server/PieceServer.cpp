@@ -1,92 +1,220 @@
 #include "PieceServer.h"
+
+#include "IRegistrator.h"
 #include "BotServer.h"
+#include "Constants.h"
 
 #include <iostream>
 
+
 namespace Server
 {
-	Piece::Piece(Bot* bot) : MoveObject(Vector2f(0, 0), 400.f), m_BotParent(bot)
+	Piece::Piece(IRegistrator* iRegistrator, Bot* bot, float mass, const sf::Vector2f& center, const sf::Vector2f& v, PieceState ability)
+		:
+		MoveObject(iRegistrator, center, mass, v)
+		, m_parent(bot)
+		, ability(ability)
+		, target(0, 0)
+		, timerActiveSpeed(0)
 	{
-		V = { 0.f,0.f };
-		maxV = 0.001f;
-		timerActive = 0.f;
-		excludedFromMerge = false;
-		m_ParentColor = static_cast<int>(m_BotParent->colB);
+		type = ObjectType::PIECE;
+		m_state = ObjectState::Delitable;
+		m_ParentColor = static_cast<int>(m_parent->colB);
+		
+		initTimerAbility();
 	}
 
+	bool Piece::checkEaten(Objects& eatingObj)
+	{
+		if (!active || !eatingObj.isActive() || (eatingObj.getID() == m_parent->getID())) return false;
 
-	void Piece::TimeElapsed(int diff)
-	{	
-		if (excludedFromMerge)
+		if (eatingObj.getMass() > _mass * 1.2f && eatingObj.Eating(*this, -min(getRadius(), eatingObj.getRadius())))
 		{
-			updateTimerActive(diff);
-		}
-	}
-
-	void Piece::setMaxV(float newMaxV)
-	{
-		maxV = newMaxV;
-	}
-
-	bool Piece::checkEaten(MoveObject* other)
-	{
-		if (!isLive() || !other->isLive())
-			return false;
-		if (other->_mass > _mass * 1.2f && other->Eating(*this, -min(getRadius(), other->getRadius())))
-		{
-			setEatenState();
-
-			if (m_BotParent)
-			{
-				m_BotParent->eatPiece(getID());
-			}
+			active = false;
+			registrator->unregisterAuxiliary(shared_from_this());
+			m_parent->removePiece(getID());
 			return true;
 		}
 		return false;
 	}
 
-	void Piece::Eat(Objects* obj)
+	bool Piece::Eat(Objects& obj)
 	{
-		obj->checkEaten(this);
+		return obj.checkEaten(*this);
 	}
 
-	void Piece::updateTimerActive(const int diff)
-	{
-		timerActive -= diff;
-		if (timerActive <= 0)
+
+	void Piece::TimeElapsed(int diff)
+	{	
+		hungry(diff);
+
+		timerActiveSpeed -= diff;
+		if (timerActiveSpeed <= 0)
 		{
-			excludedFromMerge = false;
-			timerActive = 0;
+			timerActiveAbility = 0;
+		}
+
+		m_dir = GetCyclicDiff(_center, target, MapConstants::mapWidth, MapConstants::mapHeight);
+		float lenDir = hypot(m_dir.x, m_dir.y);
+
+		float radius = getRadius();
+
+		float targetMaxV = GameConstants::MAX_V / sqrt(_mass);
+
+		if (lenDir < radius)
+		{
+			targetMaxV *= (lenDir / radius);
+		}
+
+		float kV = 1.f;
+
+		float phantomMaxV = targetMaxV * 2.4f;
+
+		if (timerActiveSpeed > 0)
+		{
+			float lerpFactor = (float)timerActiveSpeed / TIMER_SPEED;
+			maxV = lerpFunc(phantomMaxV, targetMaxV, 1.f - lerpFactor);
+		}
+		else
+		{
+			maxV = targetMaxV;
+		}
+
+
+		Vector2f F = calcAttractionForce(getIdentityVector(m_dir), GameConstants::FORCE_KOEF);
+		Vector2f a = calcAcceleration(F, _mass);
+		V = calcSpeed(V, a, diff, maxV, kV);
+
+		cout << getID().substr(8, 4) << "  " << "Center: " << _center.x << "  " << _center.y << endl;
+
+		Move(V);
+
+		registrator->moveObj(shared_from_this());
+
+		updateAbility(diff);
+	}
+
+	void Piece::setTarget(const sf::Vector2f& targetP)
+	{
+		target = targetP;
+	}
+
+	void Piece::hungry(int diff)
+	{
+		if (_mass > GameConstants::MIN_ENTITY_MASS)
+		{
+			_mass *= exp(GameConstants::HUNGRY_KOEF * diff);
+			if (_mass < GameConstants::MIN_ENTITY_MASS)
+			{
+				_mass = GameConstants::MIN_ENTITY_MASS;
+			}
 		}
 	}
 
-	void Piece::setEatenState()
+	PieceState Piece::getAbility() const
 	{
-		state = States::READY_TO_REMOVE;
+		return ability;
 	}
 
-	bool Piece::isExcludedFromMerge() const
+	const std::string& Piece::getParentID() const
 	{
-		return excludedFromMerge;
+		return m_parent->getID();
 	}
 
-	void Piece::setExcludedFlag(const bool exclude)
+	void Piece::setTimerSpeed()
 	{
-		excludedFromMerge = exclude;
-		timerActive = 5000;
+		timerActiveSpeed = TIMER_SPEED;
 	}
 
-	void Piece::setV(Vector2f newV)
+	//void Piece::setMaxV(float newMaxV)
+	//{
+	//	maxV = newMaxV;
+	//}
+
+	//void Piece::setMass(float mass)
+	//{
+	//	_mass = mass;
+	//}
+
+	nlohmann::json Piece::toStaticJson() const
 	{
-		V = newV;
+		return nlohmann::json();
 	}
 
-	float Piece::getMaxV()
+	nlohmann::json Piece::toPersistentJson() const
 	{
-		return maxV;
+		return nlohmann::json();
 	}
-	Bot* Piece::getParentPointer()
+
+	void Piece::initTimerAbility()
 	{
-		return m_BotParent;
+		switch (ability)
+		{
+		case PieceState::None:
+			timerActiveAbility = EXCLUSION_MERGE_DUR;
+			break;
+		case PieceState::Merge:
+			timerActiveAbility = 0;
+			break;
+		case PieceState::Phantom:
+			timerActiveAbility = PHANTOM_DUR;
+			break;
+		default:
+			break;
+		}
 	}
+
+	void Piece::updateAbility(int diff)
+	{
+		if (ability == PieceState::Merge) return;
+
+		timerActiveAbility -= diff;
+
+		if (timerActiveAbility <= 0)
+		{
+			switch (ability)
+			{
+			case PieceState::None:
+				ability = PieceState::Merge;
+				initTimerAbility();
+				break;
+			case PieceState::Phantom:
+				ability = PieceState::None;
+				initTimerAbility();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	//void Piece::setEatenState()
+	//{
+	//	m_state = States::READY_TO_REMOVE;
+	//}
+
+	//bool Piece::isExcludedFromMerge() const
+	//{
+	//	return excludedFromMerge;
+	//}
+
+	//void Piece::enableMerge()
+	//{
+	//	mergeEnabled = true;
+	//	mergeExclusionTimerActive = 0;
+	//}
+
+	//void Piece::setV(Vector2f newV)
+	//{
+	//	V = newV;
+	//}
+
+	//float Piece::getMaxV()
+	//{
+	//	return maxV;
+	//}
+	//Bot* Piece::getParentPointer()
+	//{
+	//	return m_parent.lock().get();
+	//}
 }

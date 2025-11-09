@@ -1,15 +1,46 @@
 #include "ObjectsServer.h"
 
+
+#include "IRegistrator.h"
+#include "Generator.h"
+
 #include "UniqueIdGenerator.h"
+#include "Constants.h"
 
 #include <math.h>
 
 namespace Server {
+	Objects::UnRegisterFunc Objects::unRegFunc = nullptr;
 
-	Objects::Objects(Vector2f center, float mass) : _center(center), _mass(mass), m_currSegIndices(-10, -10)
+	void Objects::setUnRegisterFunc(UnRegisterFunc func)
 	{
-		id = UniqueIdGenerator::generateID();
-		state = States::LIVE;
+		if (func)
+		{
+			unRegFunc = func;
+		}
+	}
+
+	Objects::Objects(IRegistrator* iRegistrator, Vector2f center, float mass) : registrator(iRegistrator), _center(center), _mass(mass), id(UniqueIdGenerator::generateID())
+	{
+		checkRegistrator(registrator);
+		initOffsetSentTime();
+		active = true;
+	}
+
+	bool Objects::registerSelf()
+	{
+		if (!registrator->spawn(getRadius(), _center))
+		{
+			return false;
+		}
+
+		auto ptr = shared_from_this();
+		registrator->registerAuxiliary(ptr);
+	}
+
+	bool Objects::isActive()
+	{
+		return active;
 	}
 
 	Objects::~Objects() = default;
@@ -25,6 +56,11 @@ namespace Server {
 		_center = center;
 	}
 
+	void Objects::setLive()
+	{
+		m_isLive = true;
+	}
+
 	Vector2f Objects::getCenter()  const
 	{
 		return _center;
@@ -34,8 +70,7 @@ namespace Server {
 	{
 		return sf::FloatRect( _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f);
 	}
-
-	string Objects::getID()
+	const std::string& Objects::getID() const
 	{
 		return id;
 	}
@@ -45,7 +80,7 @@ namespace Server {
 		return sqrt(_mass);
 	}
 
-	float Objects::getMass()const
+	const float Objects::getMass() const
 	{
 		return  _mass;
 	}
@@ -59,22 +94,61 @@ namespace Server {
 	{
 		if (isCollision(obj, shift))
 		{
-			_mass += obj.getMass() * 3.f;
+			_mass += obj.getMass() * 6.f;
 			return true;
 		}
 		return false;
 	}
 
+
+	void Objects::unRegister()
+	{
+		if (unRegFunc)
+		{
+			unRegFunc(this->getID());
+		}
+	}
+
+	/*nlohmann::json Objects::toJson()
+	{
+		nlohmann::json res;
+		res["type"] = type;
+		auto staticJs = toStaticJson();
+		if (staticJs != lastSnapshot || staticSentDataTime >= ServerConstants::TIMER_SENT_STATIC_DATA)
+		{
+			res["staticData"] = staticJs;
+			staticSentDataTime = 0;
+		}
+
+		res["persistentData"] = toPersistentJson();
+		return res;
+	}*/
+
+	void Objects::initOffsetSentTime()
+	{
+		staticSentDataTime = genNumber<int>(-1, ServerConstants::TIMER_SENT_STATIC_DATA - 1);
+	}
+
 	bool Objects::isLive()
 	{
-		return state == States::LIVE;
+		return m_isLive;
+	}
+
+	ObjectType Objects::getType() const
+	{
+		return type;
+	}
+
+	ObjectState Objects::getState() const
+	{
+		return m_state;
 	}
 
 	bool Objects::isCollision(const Objects& obj, const float shift)
 	{
 		Vector2f Pos1 = getCenter();
 		Vector2f Pos2 = obj.getCenter();
-		return GetDist(Pos1, Pos2) < getRadius() + obj.getRadius() + shift;
+		return GetCyclicDist(Pos1, Pos2, MapConstants::mapWidth, MapConstants::mapHeight) < getRadius() + obj.getRadius() + shift;
 	}
 
 	string  Objects::getDescription()

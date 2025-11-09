@@ -50,7 +50,8 @@ void Bot::TimeElapsed(int diff)
 	}*/
 	MoveObject::TimeElapsed(diff);
 	_shape.setRadius(_radius);
-
+	_shape.setPosition(Center.x - _shape.getRadius(), Center.y - _shape.getRadius());
+	name.setPosition(Center.x - name.getLocalBounds().width / 2, Center.y - name.getLocalBounds().height / 2);
 }
 //
 //void Bot::pieceToSides()
@@ -74,10 +75,9 @@ void Bot::TimeElapsed(int diff)
 //	}
 //}
 
-
-void Bot::setPosMouse(float x, float y)
+Vector2f Bot::getDirection() const
 {
-	Mouse = Vector2f(x, y);
+	return Mouse;
 }
 
 

@@ -131,7 +131,7 @@ int main()
       /*  time2.update();
         int diffDraw = time2.getDeltaTime();*/
 
-        /*cout << "diffEvents: " << diffEvents << " diffTimeElapsed: " << diffTimeElapsed << " diffDraw: " << diffDraw << endl;*/
+      
     }
     rec.clear();
     return 0;

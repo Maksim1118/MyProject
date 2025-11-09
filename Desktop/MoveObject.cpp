@@ -2,15 +2,15 @@
 
 constexpr float MAX_DIFF = 300.f;
 
-MoveObject::MoveObject(Vector2f center, float radius, string id): Objects(center, radius,id), V(0.f, 0.f), Mouse(0.f, 0.f)
+MoveObject::MoveObject(Vector2f center, float radius, string id): Objects(center, radius,id), V(0.f, 0.f), Mouse(0.f, 0.f), maxV(0.f)
 {
 
 }
 
 void MoveObject::TimeElapsed(int diff)
-{
+{/*
 	float len = GetLen(difference);
-	float giveLen = 0.055f * diff;
+	float giveLen = 0.035f * diff;
 	if (len > 0)
 	{
 		if (giveLen > len)
@@ -24,13 +24,56 @@ void MoveObject::TimeElapsed(int diff)
 			Center += give;
 			difference -= give;
 		}
-	}
+	}*/
+	Center += difference;
+	difference = { 0.f, 0.f };
 	Center += V * (float)diff;
 }
 
 void MoveObject::setSpeed(Vector2f newSpeed)
 {
 	V = newSpeed;
+}
+
+Vector2f MoveObject::calcAttractionForce(const sf::Vector2f& dir, float koef)
+{
+	return dir * koef;
+}
+
+
+Vector2f MoveObject::calcAcceleration(const Vector2f& F, const float mass)
+{
+	return F / mass;
+}
+
+Vector2f MoveObject::calcSpeed(const Vector2f& v0, const Vector2f& a, int diff, float maxV, float koef)
+{
+	Vector2f v{ 0.f,0.f };
+	v = v0 + a * (float)diff;
+	float lenV = hypot(v.x, v.y);
+	if (lenV > maxV)
+	{
+		v.x *= maxV / lenV;
+		v.y *= maxV / lenV;
+	}
+	return v;
+}
+
+float MoveObject::toroidalDiff(float diff, float size)
+{
+	float half = size / 2.f;
+	if (diff > half) return diff - size;
+	else if (diff < -half) return diff + size;
+	return diff;
+}
+
+sf::Vector2f MoveObject::GetCyclicDiff(const Vector2f& from, const Vector2f& to, float sizeW, float sizeH)
+{
+	float diffX = to.x - from.x;
+	float dx = toroidalDiff(diffX, sizeW);
+	float diffY = to.y - from.y;
+	float dy = toroidalDiff(diffY, sizeH);
+	return { dx, dy };
 }
 
 void MoveObject::setDifference(Vector2f diff)
@@ -102,4 +145,19 @@ Vector2f MoveObject::getIdentityVector(const Vector2f& vector)
 		Vec1 = Vector2f(cos(angle), sin(angle));
 	}
 	return Vec1;
+}
+
+void MoveObject::setDirection(const sf::Vector2f& dir)
+{
+	Mouse = dir;
+}
+
+void MoveObject::setMaxV(float _maxV)
+{
+	maxV = _maxV;
+}
+
+Vector2f MoveObject::getDirection() const
+{
+	return Mouse;
 }

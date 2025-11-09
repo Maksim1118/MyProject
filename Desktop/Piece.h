@@ -20,14 +20,11 @@ public:
 	{
 		return m_parentId;
 	}
-	float getMaxV();
-	void setMaxV(float newMaxV);
-	void setCenter(Vector2f newCenter) override;
 
+	void setCenter(Vector2f newCenter) override;
 private:
 	bool m_isExcluded;
 	std::string m_parentId;
 	CircleShape _shape;
-	float maxV;
 
 };

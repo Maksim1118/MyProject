@@ -4,6 +4,7 @@
 #include "MessageServer.h"
 #include "PieceServer.h"
 #include "Generator.h"
+#include "Constants.h"
 
 #include <ctime>
 #include <algorithm>
@@ -17,14 +18,8 @@
 //constexpr float maxScale = 1.00f;
 //constexpr float minScale = 2.00f;
 
-constexpr int listBotSize = 10;
-constexpr int listFoodSize = 500;
-constexpr int listThornSize = 10;
-
-
 namespace Server
 {
-	float GameEngine::m_TimeUpdateListObjects = 1000.0f;
 
 	enum class States;
 	void runServer(GameEngine& _Engine)
@@ -54,59 +49,11 @@ namespace Server
 	}
 
 	GameEngine::GameEngine()
-		:m_camera({ fieldWidth, fieldHeight }), quadTree(0, FloatRect(0, 0, fieldWidth, fieldHeight))
+		:m_camera({ fieldWidth, fieldHeight })
 	{
+		m_map = make_unique<Map>();
+		m_map->createSceneObjects();
 		srand(time(NULL));
-		/*m_segmentSize = { fieldWidth / (float)std::size(m_segments), fieldHeight / (float)std::size(m_segments[0]) };*/
-
-		/*fillObjects(listBots, listBotSize);
-		fillObjects(listThorns, listThornSize);*/
-		fillObjects<Food>(listFoodSize);
-		fillObjects<Thorn>(listThornSize);
-		fillObjects<Bot>(listBotSize);
-
-	/*	m_segmentSize = { fieldWidth / (float)std::size(m_segments), fieldHeight / (float)std::size(m_segments[0])};
-		for (int i = 0; i < std::size(m_segments); ++i)
-		{
-			for (int j = 0; j < std::size(m_segments[0]); ++j)
-			{
-				m_segments[i][j].m_leftUpperPos = { (float)j * m_segmentSize.x,(float)i * m_segmentSize.y };
-			}
-		}*/
-
-		/*fillSegments<Bot>(listBotSize, m_segments,
-			[&](shared_ptr<Bot> b) { return spawn(b); },
-			[&](shared_ptr<Bot> b) { return findSegmentIndices(b); });
-
-		fillSegments<Food>(listFoodSize, m_segments,
-			[&](shared_ptr<Food> f) { return spawn(f); },
-			[&](shared_ptr<Food> f) { return findSegmentIndices(f); });
-
-		fillSegments<Thorn>(listThornSize, m_segments,
-			[&](shared_ptr<Thorn> t) { return spawn(t); },
-			[&](shared_ptr<Thorn> t) { return findSegmentIndices(t); });*/
-
-		/*fillList(listBots, 1, "Bot");
-		fillList(listThorns, ThornSpriteSize, "");
-		fillList(listFoods, ArrFoodSize, "");*/
-
-
-		/*spawnList(listBots);
-		spawnList(listThorns);
-		spawnList(listFoods);*/
-
-		
-
-	}
-
-
-	void GameEngine::updateMoveObjectFromMapBounder(shared_ptr<MoveObject> obj)
-	{
-		Vector2f centerFromMap = getCoordinateFromMap(obj->getCenter());
-		if (centerFromMap != obj->getCenter())
-		{
-			obj->setCenter(centerFromMap);
-		}
 	}
 
 	/*vector<FloatRect> GameEngine::computeFreeZones(const FloatRect& mapBounds, const vector<FloatRect>& occupiedZones)
@@ -232,190 +179,23 @@ namespace Server
 		auto heroCol = static_cast<int>(hero.colB);
 		Hero["id"] = hero.getID();
 		Hero["Center"] = { {"x", hero.getCenter().x},{ "y", hero.getCenter().y} };
-		/*cout << "x: " << Hero["Center"]["x"].get<float>() << " y: " << Hero["Center"]["y"].get<float>() << endl;*/
+		
 		Hero["Radius"] = hero.getRadius();
 		Hero["Color"] = heroCol;
 		Hero["Name"] = hero.getName();
-		Hero["Splitted"] = hero.isSplitted();
-		Hero["Feeded"] = hero.isFeeded();
-		Hero["Mass"] = hero.getMass();
+		Hero["Splitted"] = hero.isSplitting;
+		/*Hero["Feeded"] = hero.isFeeded();*/
+		Hero["Mass"] = hero.getMass(); 
+		Hero["MaxV"] = hero.getMaxV();
 		Hero["GameOver"] = hero.isGameOver();
 		Hero["Speed"]["x"] = hero.getSpeed().x;
 		Hero["Speed"]["y"] = hero.getSpeed().y;
+		
+		Hero["Type"] = hero.getType();
 	
 		return Hero;
 	}
 
-	nlohmann::json GameEngine::process(nlohmann::json request)
-	{
-		nlohmann::json response;
-		if (request.contains("action") && request["action"] == "create Player")
-		{
-			const string name = request["Name"].get<string>();
-			shared_ptr<Hero> hero = make_shared<Hero>(m_map.getGlobalList<Feed>(), name);
-			shift(hero.get());
-			response["Player"] = HeroToJson(*hero);
-			m_map.addToGlobalList(hero->getID(), hero);
-
-			response["status"] = "OK";
-		}
-		else if (request.contains("action") && request["action"] == "split")
-		{
-			string id = request["Id"];
-			for (const auto& hero : m_map.getGlobalList<Hero>())
-			{
-				if (id == hero.first)
-				{
-					hero.second->setSplite();
-					response["status"] = "OK";
-					break;
-				}
-			}
-			
-		}
-		else if (request.contains("action") && request["action"] == "feed")
-		{
-			string id = request["Id"];
-			for (const auto& hero : m_map.getGlobalList<Hero>())
-			{
-				if (id == hero.first)
-				{
-					hero.second->setFeeded();
-					response["status"] = "OK";
-					break;
-				}
-			}
-		}
-		
-		else if (request.contains("action") && request["action"] == "ask pos mouse")
-		{
-			string id = request["Id"];
-			for (const auto& hero : m_map.getGlobalList<Hero>())
-			{
-				if (id == hero.first)
-				{
-					float x = request["mousePosition"]["x"];
-					float y = request["mousePosition"]["y"];
-
-					hero.second->setPosMouse(x, y);
-					response["status"] = "OK";
-					break;
-				}
-			}
-		}
-		else if (request.contains("action") && request["action"] == "get View Info")
-		{
-			string id = request["Id"].get<string>();
-			const auto hero = m_map.getGlobalList<Hero>().find(id);
-			if (hero != m_map.getGlobalList<Hero>().end())
-			{
-				response["logicSize"]["x"] = m_camera.getLogicSize().x;
-				response["logicSize"]["y"] = m_camera.getLogicSize().y;
-
-				response["zoom"] = m_camera.getZoom(hero->second->getMass(), minBotAndPlayerMass);
-				response["status"] = "OK";
-			}
-			else
-			{
-				response["status"] = "ERROR";
-			}
-		}
-
-		else if (request.contains("action") && request["action"] == "get Map Info")
-		{
-			response["mapSize"]["x"] = fieldWidth;
-			response["mapSize"]["y"] = fieldHeight;
-
-			response["status"] = "OK";
-		}
-
-		else if (request.contains("action") && request["action"] == "ask update objects")
-		{
-			if (m_TimeUpdateListObjects == 0.0f)
-			{
-				m_TimeUpdateListObjects = 1000.0f;
-				response["can update"] = true;
-			}
-			else
-			{
-				response["can updaete"] = false;
-			}
-			response["status"] = "OK";
-		}
-		else if (request.contains("action") && request["action"] == "get Segment Info")
-		{
-			/*response["segmentSize"]["x"] = m_segmentSize.x;
-			response["segmentSize"]["y"] = m_segmentSize.y;
-
-			response["maxIndices"]["x"] = std::size(m_segments[0]);
-			response["maxIndices"]["y"] = std::size(m_segments);*/
-		}
-		else if (request.contains("action") && request["action"] == "get object")
-		{
-			string id = request["Id"].get<string>();
-			auto hero = m_map.getGlobalList<Hero>().find(id);
-			if (hero != m_map.getGlobalList<Hero>().end())
-			{
-				Vector2f cameraSize = { (Vector2f)m_camera.getLogicSize() * m_camera.getZoom(hero->second->getMass(), minBotAndPlayerMass)};
-				segmentInterval interval = m_map.getSegmentInterval(hero->second->getCenter(), cameraSize);
-				nlohmann::json allHeroesJson = nlohmann::json::array();
-				nlohmann::json allFoodsJson = nlohmann::json::array();
-				nlohmann::json allPiecesJson = nlohmann::json::array();
-				nlohmann::json allThornsJson = nlohmann::json::array();
-				nlohmann::json allBotsJson = nlohmann::json::array();
-			/*	cout << "CountHero: " << count << endl;
-				if (count == 0)
-				{
-					std::cout << "Count is zero. Press Enter to exit..." << std::endl;
-					std::string dummy;
-					std::getline(std::cin, dummy);
-					exit(0);
-				}*/
-
-				for (int i = 0; i < segmentCol; ++i)
-				{
-					for (int j = 0; j < segmentRows; ++j)
-					{
-						if (m_map.isInterval(i, j, interval, cameraSize));
-						{
-							auto& seg = m_map.getSegment({ i, j });
-							fillListToJson(seg.getSegmentList<Hero>(), HeroToJson, [](auto& element) { return element.second.get(); }, allHeroesJson);
-							fillListToJson(seg.getSegmentList<Food>(), FoodToJson, [](auto& element) { return element.second.get(); }, allFoodsJson);
-							fillListToJson(seg.getSegmentList<Piece>(), PieceToJson, [](auto& element) { return element.second.get(); }, allPiecesJson);
-							fillListToJson(seg.getSegmentList<Thorn>(), ThornToJson, [](auto& element) { return element.second.get(); }, allThornsJson);
-							fillListToJson(seg.getSegmentList<Bot>(), BotToJson, [](auto& element) { return element.second.get(); }, allBotsJson);
-						}
-					}
-				}
-				/*if (allHeroesJson.size() == 0)
-				{
-					std::cout << "allHeroesJson zero" << std::endl;
-					std::string dummy;
-					std::getline(std::cin, dummy);
-					exit(0);
-				}*/
-				response["ListHeroes"] = allHeroesJson;
-				response["ListFoods"] = allFoodsJson;
-				response["ListPieces"] = allPiecesJson;
-				response["ListThorns"] = allThornsJson;
-				response["ListBots"] = allBotsJson;
-				
-
-				
-				/*response["ListBots"] = fillListToJson(hero->second->m_segInterval, listBots, BotToJson);*/
-			/*	response["ListFeeds"] = fillListToJson(hero->second->m_segInterval, FeedToJson);
-				response["ListThorns"] = fillListToJson(listThorns, ThornToJson);*/
-			}
-			
-
-			response["status"] = "OK";
-		}
-		else
-		{
-			response["status"] = "ERROR";
-		}
-		return response;
-	}
 
 	/*bool GameEngine::isCollWithMap(const  Vector2f& pos)
 	{
@@ -436,7 +216,7 @@ namespace Server
 		return Vector2f(pos.x, pos.y);
 	}*/
 
-	void GameEngine::clearWeakList()
+	/*void GameEngine::clearWeakList()
 	{
 		for (auto& it = m_WeakListPtr.begin(); it != m_WeakListPtr.end();)
 		{
@@ -449,7 +229,7 @@ namespace Server
 				++it;
 			}
 		}
-	}
+	}*/
 
 	//Vector2i GameEngine::findSegmentIndices(sf::Vector2f pos)
 	//{
@@ -518,179 +298,296 @@ namespace Server
 		return res;
 	}*/
 
-	bool GameEngine::isOutSegment(sf::Vector2i indices)
-	{
-		return indices.x < 0 || indices.x >= segmentCol || indices.y < 0 || indices.y >= segmentRows;
-	}
+	//bool GameEngine::isOutSegment(sf::Vector2i indices)
+	//{
+	//	return indices.x < 0 || indices.x >= segmentCol || indices.y < 0 || indices.y >= segmentRows;
+	//}
 
-	void GameEngine::addInRemoveList(const std::string& id)
-	{
-		removeList.insert(id);
-	}
+	//void GameEngine::addInRemoveList(const std::string& id)
+	//{
+	//	removeList.insert(id);
+	//}
 
-	Vector2f GameEngine::getCoordinateFromMap(const Vector2f& center)
-	{
-		Vector2f pos = center;
-		if (pos.x < 0)
-		{
-			pos.x += fieldWidth;
-		}
-		else if (pos.x > fieldWidth)
-		{
-			pos.x -= fieldWidth;
-		}
-
-		if (pos.y < 0)
-		{
-			pos.y += fieldHeight;
-		}	
-		else if (pos.y > fieldHeight)
-		{
-			pos.y -= fieldHeight;
-		}
-		return pos;
-	}
-
-	Vector2f GameEngine::getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height)
-	{
-		return Vector2f();
-	}
+	//Vector2f GameEngine::getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height)
+	//{
+	//	return Vector2f();
+	//}
 
 	void GameEngine::TimeElapsed(int& diff)
 	{
-		m_TimeUpdateListObjects -= diff;
+		m_map->TimeElapsed(diff);
+		/*m_TimeUpdateListObjects -= diff;
 		if (m_TimeUpdateListObjects < 0.0f)
-			m_TimeUpdateListObjects = 0.0f;
+			m_TimeUpdateListObjects = 0.0f;*/
+
+
+	
+
+
+
+		/*for (auto& food : m_map.getList<Food>())
+		{
+			food.second->TimeElapsed(diff);
+			if (food.second->m_state == States::READY_TO_LIVE)
+			{
+				spawnObj(food.second);
+				food.second->m_state = States::LIVE;
+			}
+		}
+
+		for (auto& thorn : m_map.getList<Thorn>())
+		{
+			thorn.second->TimeElapsed(diff);
+			if (thorn.second->m_state == States::READY_TO_LIVE)
+			{
+				spawnObj(thorn.second);
+				thorn.second->m_state = States::LIVE;
+			}
+		}*/
+
+		/*for (auto& bot : m_map.getList<Bot>())
+		{
+
+			bot.second->TimeElapsed(diff);
+			
+			if (bot.second->m_isLive())
+			{
+				if(bot.second->isSplitted())
+				{
+					for (auto& piece : bot.second->pieces)
+					{
+						updateMoveObjectFromMapBounder(piece.second);
+						quadTree.updateInTreePos(piece.second);
+					}
+				}
+				else
+				{
+					updateMoveObjectFromMapBounder(bot.second);
+					quadTree.updateInTreePos(bot.second);
+				}
+			}
+
+			else if (bot.second->m_state == States::READY_TO_LIVE)
+			{
+				spawnObj(bot.second);
+				bot.second->m_state = States::LIVE;
+			}
+		}
+
+		for (auto& hero : m_map.getList<Hero>())
+		{
+			hero.second->TimeElapsed(diff);
+			if (hero.second->m_isLive())
+			{
+				if (hero.second->isSplitted())
+				{
+					for (auto& piece : hero.second->pieces)
+					{
+						updateMoveObjectFromMapBounder(piece.second);
+						quadTree.updateInTreePos(piece.second);
+					}
+				}
+				else
+				{
+					updateMoveObjectFromMapBounder(hero.second);
+					quadTree.updateInTreePos(hero.second);
+				}
+			}
+		}
+
+		calcDirMoveBot(diff);
+
+
+		for (auto& hero : m_map.getList<Hero>())
+		{
+			if (hero.second->isSplitted())
+			{
+				for (auto& piece : hero.second->pieces)
+				{
+					quadTree.tryEat(piece.second);
+				}
+			}
+			else
+			{
+				quadTree.tryEat(hero.second);
+			}
+		}
+
+		for (auto& bot : m_map.getList<Bot>())
+		{
+			if (bot.second->isSplitted())
+			{
+				for (auto& piece : bot.second->pieces)
+				{
+					quadTree.tryEat(piece.second);
+				}
+			}
+			else
+			{
+				quadTree.tryEat(bot.second);
+			}
+		}
+
+
+		for (auto& hero : m_map.getList<Hero>())
+		{
+			if (hero.second->isSplitted())
+			{
+				for (auto& piece : hero.second->pieces)
+				{
+					quadTree.tryEat(piece.second);
+				}
+			}
+			else
+			{
+				quadTree.tryEat(hero.second);
+			}
+		}
+
+		for (auto& bot : m_map.getList<Bot>())
+		{
+			if (bot.second->isSplitted())
+			{
+				for (auto& piece : bot.second->pieces)
+				{
+					quadTree.tryEat(piece.second);
+				}
+			}
+			else
+			{
+				quadTree.tryEat(bot.second);
+			}
+		}*/
 
 		/*updateAndRemove(listHeroes, m_WeakListPtr, diff);
-		updateAndRemove(m_ListFeeds, m_WeakListPtr, diff);
+		updateAndRemove(listFeeds, m_WeakListPtr, diff);
 
 		updateAndRemove(listFoods, m_WeakListPtr, diff);*/
 		/*updateList(listFoods, diff);
 		updateList(listHeroes, diff);*/
 
-		for (auto& food : m_map.getGlobalList<Food>())
-		{
-			food.second->TimeElapsed(diff);
-			if (food.second->isLive())
-			{
-				bool isUpdate = m_map.updateSegments(food.first, food.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-			else if (food.second->state == States::READY_TO_LIVE)
-			{
-				spawnObj(food.second);
-				food.second->state = States::LIVE;
-				bool isUpdate = m_map.updateSegments(food.first, food.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-		}
+		//for (auto& food : m_map.getList<Food>())
+		//{
+		//	food.second->TimeElapsed(diff);
+		//	if (food.second->m_isLive())
+		//	{
+		//		bool isUpdate = m_map.updateSegments(food.first, food.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//	else if (food.second->m_state == States::READY_TO_LIVE)
+		//	{
+		//		spawnObj(food.second);
+		//		food.second->m_state = States::LIVE;
+		//		bool isUpdate = m_map.updateSegments(food.first, food.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//}
 
-		for (auto& bot : m_map.getGlobalList<Bot>())
-		{
-			bot.second->TimeElapsed(diff);
+		//for (auto& bot : m_map.getList<Bot>())
+		//{
+		//	bot.second->TimeElapsed(diff);
 
-			if (bot.second->isSplitted())
-			{
-				for (auto& piece : bot.second->pieces)
-				{
-					updateMoveObjectFromMapBounder(piece.second);
-					piece.second->TimeElapsed(diff);
-					bool isUpdate = m_map.updateSegments(piece.first, piece.second);
-					if (!isUpdate)
-					{
-						cerr << "error update segment\n";
-					}
-				}
-				/*bool isUpdate = m_map.updateSegments(bot.first, bot.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}*/
-			}
+		//	if (bot.second->isSplitted())
+		//	{
+		//		for (auto& piece : bot.second->pieces)
+		//		{
+		//			updateMoveObjectFromMapBounder(piece.second);
+		//			piece.second->TimeElapsed(diff);
+		//			bool isUpdate = m_map.updateSegments(piece.first, piece.second);
+		//			if (!isUpdate)
+		//			{
+		//				cerr << "error update segment\n";
+		//			}
+		//		}
+		//		/*bool isUpdate = m_map.updateSegments(bot.first, bot.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}*/
+		//	}
 
-			else if(bot.second->isLive())
-			{
-				updateMoveObjectFromMapBounder(bot.second);
-				bool isUpdate = m_map.updateSegments(bot.first, bot.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-			else if (bot.second->state == States::READY_TO_LIVE)
-			{
-				spawnObj(bot.second);
-				bot.second->state = States::LIVE;
-				bool isUpdate = m_map.updateSegments(bot.first, bot.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-		}
+		//	else if(bot.second->m_isLive())
+		//	{
+		//		updateMoveObjectFromMapBounder(bot.second);
+		//		bool isUpdate = m_map.updateSegments(bot.first, bot.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//	else if (bot.second->m_state == States::READY_TO_LIVE)
+		//	{
+		//		spawnObj(bot.second);
+		//		bot.second->m_state = States::LIVE;
+		//		bool isUpdate = m_map.updateSegments(bot.first, bot.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//}
 
-		for (auto& thorn : m_map.getGlobalList<Thorn>())
-		{
-			thorn.second->TimeElapsed(diff);
-			if (thorn.second->isLive())
-			{
-				bool isUpdate = m_map.updateSegments(thorn.first, thorn.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-			else if (thorn.second->state == States::READY_TO_LIVE)
-			{
-				spawnObj(thorn.second);
-				thorn.second->state = States::LIVE;
-				bool isUpdate = m_map.updateSegments(thorn.first, thorn.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-		}
+		//for (auto& thorn : m_map.getList<Thorn>())
+		//{
+		//	thorn.second->TimeElapsed(diff);
+		//	if (thorn.second->m_isLive())
+		//	{
+		//		bool isUpdate = m_map.updateSegments(thorn.first, thorn.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//	else if (thorn.second->m_state == States::READY_TO_LIVE)
+		//	{
+		//		spawnObj(thorn.second);
+		//		thorn.second->m_state = States::LIVE;
+		//		bool isUpdate = m_map.updateSegments(thorn.first, thorn.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//}
 
-		for (auto& hero : m_map.getGlobalList<Hero>())
-		{
-			hero.second->TimeElapsed(diff);
+		//for (auto& hero : m_map.getList<Hero>())
+		//{
+		//	hero.second->TimeElapsed(diff);
 
-			if (hero.second->isSplitted())
-			{
-				for (auto& piece : hero.second->pieces)
-				{
-					updateMoveObjectFromMapBounder(piece.second);
-					piece.second->TimeElapsed(diff);
-					bool isUpdate = m_map.updateSegments(piece.first, piece.second);
-					if (!isUpdate)
-					{
-						cerr << "error update segment\n";
-					}
-				}
-				/*bool isUpdate = m_map.updateSegments(hero.first, hero.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}*/
-			}
-			else
-			{
-				updateMoveObjectFromMapBounder(hero.second);
-				bool isUpdate = m_map.updateSegments(hero.first, hero.second);
-				if (!isUpdate)
-				{
-					cerr << "error update segment\n";
-				}
-			}
-		}
+		//	if (hero.second->isSplitted())
+		//	{
+		//		for (auto& piece : hero.second->pieces)
+		//		{
+		//			updateMoveObjectFromMapBounder(piece.second);
+		//			piece.second->TimeElapsed(diff);
+		//			bool isUpdate = m_map.updateSegments(piece.first, piece.second);
+		//			if (!isUpdate)
+		//			{
+		//				cerr << "error update segment\n";
+		//			}
+		//		}
+		//		/*bool isUpdate = m_map.updateSegments(hero.first, hero.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}*/
+		//	}
+		//	else
+		//	{
+		//		updateMoveObjectFromMapBounder(hero.second);
+		//		bool isUpdate = m_map.updateSegments(hero.first, hero.second);
+		//		if (!isUpdate)
+		//		{
+		//			cerr << "error update segment\n";
+		//		}
+		//	}
+		//}
 
 		/*clearWeakList();*/
 
@@ -699,7 +596,7 @@ namespace Server
 		updateAndRespawn(listThorns, timeRespawnThorn, diff);*/
 
 		/*allObjectsCollWithMap();*/
-		calcDirMoveBot(diff);
+		
 
 		
 
@@ -766,7 +663,7 @@ namespace Server
 
 		//for (auto it = listBots.begin(); it != objectList.end();) {
 		//	(*it)->TimeElapsed(diff);
-		//	if ((*it)->state == States::EATEN)
+		//	if ((*it)->m_state == States::EATEN)
 		//	{
 		//		/*shared_ptr<T> tempPtr = *it;
 		//		weakList.push_back(tempPtr);*/
@@ -776,280 +673,9 @@ namespace Server
 		//		++it;
 		//	}
 		//}
-		for (int i = 0; i < segmentRows; ++i)
-		{
-			for (int j = 0; j < segmentCol; ++j)
-			{
-				auto& currSegment = m_map.getSegment({ i,j });
-
-				for (auto& hero : currSegment.getSegmentList<Hero>())
-				{
-					if (hero.second->isSplitted())
-					{
-						continue;
-					}
-					vector<Vector2i> segIndices = m_map.objectInSegments(hero.second->getCenter(), hero.second->getRadius());
-					/*cout << "segIndicesSize: " << segIndices.size() << endl;*/
-					for (const auto& Ind : segIndices)
-					{
-						auto& segment = m_map.getSegment(Ind);
-						for (auto& food : segment.getSegmentList<Food>())
-						{
-							hero.second->Eat(food.second.get());
-						}
-
-						for (auto& thorn : segment.getSegmentList<Thorn>())
-						{
-							hero.second->Eat(thorn.second.get());
-						}
-
-						for (auto& bot : segment.getSegmentList<Bot>())
-						{
-							hero.second->Eat(bot.second.get());
-						}
-					}
-				}
-
-				for (auto& bot : currSegment.getSegmentList<Bot>())
-				{
-					if (bot.second->isSplitted())
-					{
-						continue;
-					}
-					vector<Vector2i> segIndices = m_map.objectInSegments( bot.second->getCenter(), bot.second->getRadius());
-					/*cout << "segIndicesSize: " << segIndices.size() << endl;*/
-					for (const auto& Ind : segIndices)
-					{
-						auto& segment = m_map.getSegment(Ind);
-						for (auto& food : segment.getSegmentList<Food>())
-						{
-							bot.second->Eat(food.second.get());
-						}
-
-						for (auto& thorn : segment.getSegmentList<Thorn>())
-						{
-							bot.second->Eat(thorn.second.get());
-						}
-
-						for (auto& hero : segment.getSegmentList<Hero>())
-						{
-							bot.second->Eat(hero.second.get());
-						}
-					}
-				}
-
-				for (auto& piece : currSegment.getSegmentList<Piece>())
-				{
-					vector<Vector2i> segIndices = m_map.objectInSegments(piece.second->getCenter(), piece.second->getRadius());
-					/*cout << "segIndicesSize: " << segIndices.size() << endl;*/
-					for (const auto& Ind : segIndices)
-					{
-						auto& segment = m_map.getSegment(Ind);
-						for (auto& food: segment.getSegmentList<Food>())
-						{
-							piece.second->Eat(food.second.get());
-						}
-
-						for (auto& thorn : segment.getSegmentList<Thorn>())
-						{
-							piece.second->Eat(thorn.second.get());
-						}
-
-						for (auto& otherPiece : segment.getSegmentList<Piece>())
-						{
-							if (piece == otherPiece || piece.first == otherPiece.first)
-							{
-								continue;
-							}
-
-							piece.second->Eat(otherPiece.second.get());
-						}
-					}
-				}
-			}
-		}
-
-		for (int i = 0; i < segmentRows; ++i)
-		{
-			for (int j = 0; j < segmentCol; ++j)
-			{
-				auto& currSegment = m_map.getSegment({ i,j });
-
-				for (auto& hero : currSegment.getSegmentList<Hero>())
-				{
-					if (hero.second->state == States::READY_TO_REMOVE)
-					{
-						addInRemoveList(hero.first);
-					}
-				}
-
-				for (auto& bot : currSegment.getSegmentList<Bot>())
-				{
-					if (bot.second->state == States::READY_TO_REMOVE)
-					{
-						addInRemoveList(bot.first);
-					}
-				}
-
-				for (auto& piece : currSegment.getSegmentList<Piece>())
-				{
-					if (piece.second->state == States::READY_TO_REMOVE)
-					{
-						addInRemoveList(piece.first);
-					}
-				}
-			}
-		}
-
-		/*for (int i = 0; i < segmentRows; ++i)
-		{
-			for (int j = 0; j < segmentCol; ++j)
-			{
-				auto& currSegment = m_mapSegments[i][j];
-
-				for (auto& food : currSegment.foods)
-				{
-					if (!food.second)
-					{
-						cout << "Food nullptr" << endl;
-						string dump;
-						getline(cin, dump);
-					}
-					if (food.second->state == States::READY_TO_LIVE)
-					{
-						 spawn(food.second);
-						 updateSegments(food.first, food.second);
-					}
-				}
-			}
-		}*/
-
-		for (auto itID = removeList.begin(); itID != removeList.end();)
-		{
-			for (int i = 0; i < segmentRows; ++i)
-			{
-				for (int j = 0; j < segmentCol; ++j)
-				{
-
-					if (m_map.removeFromSegment<Hero>({i,j}, *itID) && m_map.eraseFromGlobalList<Hero>(*itID))
-					{
-						itID = removeList.erase(itID);
-						goto next_id;
-					}
-				}
-			}
-			++itID;
-		next_id:;
-		}
 
 
-		//unordered_set<string> toRemoveList;
-		//
-		//for (auto& i = listFoods.begin(); i != listFoods.end(); ++i)
-		//{
-		//	for (auto j = listHeroes.begin(); j != listHeroes.end(); j++)
-		//	{
-		//		(j->second)->Eat((i->second).get());
-		//		if (i->second->state == States::EATEN)
-		//		{
-		//			toRemoveList.insert(i->second->getID());
-		//		}
-		//	}
-		//}
 
-		//for (auto& i = listFoods.begin(); i != listFoods.end(); ++i)
-		//{
-		//	for (auto j = listBots.begin(); j != listBots.end(); j++)
-		//	{
-		//		(j->second)->Eat((i->second).get());
-		//		if (i->second->state == States::EATEN)
-		//		{
-		//			toRemoveList.insert(i->second->getID());
-		//		}
-		//	}
-		//}
-
-		//for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
-		//{
-		//	for (auto j = listHeroes.begin(); j != listHeroes.end(); j++)
-		//	{
-		//		(j->second)->Eat((i->second).get());
-		//	}
-		//}
-
-		//for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end(); ++i)
-		//{
-		//	for (auto j = listBots.begin(); j != listBots.end(); j++)
-		//	{
-		//		(j->second)->Eat((i->second).get());
-		//	}
-		//}
-
-		//for (auto& i = listThorns.begin(); i != listThorns.end(); ++i)
-		//{
-		//	for (auto j = listHeroes.begin(); j != listHeroes.end(); j++)
-		//	{
-		//		(j->second)->Eat((i->second).get());
-		//	}
-		//}
-
-		//for (auto& i = listThorns.begin(); i != listThorns.end(); ++i)
-		//{
-		//	for (auto& b : listBots)
-		//	{
-		//		b.second->Eat((i->second).get());
-		//	}
-		//}
-
-		//for (auto& i = listBots.begin(); i != listBots.end(); ++i)
-		//{
-		//	/*if ((*i)->state == States::EATEN)
-		//	{
-		//		continue;
-		//	}*/
-		//	for (auto j = listBots.begin(); j != listBots.end(); ++j)
-		//	{
-		//		if (i == j) continue;
-		//		(i->second)->Eat((j->second).get());
-		//	}
-		//}
-
-		//for (auto& b : listBots)
-		//{
-		//	for (auto& hero : listHeroes)
-		//	{
-		//		b.second->Eat(hero.second.get());
-		//		hero.second->Eat(b.second.get());
-		//	}
-		//}
-
-		//for (auto& i = listHeroes.begin(); i != listHeroes.end(); ++i)
-		//{
-		//	/*if ((*i)->state == States::EATEN)
-		//	{
-		//		continue;
-		//	}*/
-		//	for (auto j = listHeroes.begin(); j != listHeroes.end(); ++j)
-		//	{
-		//		if (i == j) continue;
-		//		(i->second)->Eat((j->second).get());
-		//		if (j->second->state == States::EATEN)
-		//		{
-		//			toRemoveList.insert(j->second->getID());
-		//		}
-		//	}
-
-		//	if (i->second->state == States::EATEN)
-		//	{
-		//		toRemoveList.insert(i->second->getID());
-		//	}
-		//}
-
-		/*for (const auto& id : toRemoveList)
-		{
-			listHeroes.erase(id);
-			listFoods.erase(id);
-		}*/
 	}
 
 	/*segmentInterval GameEngine::getSegmentInterval(sf::Vector2f center, sf::Vector2f sizeParamObj, sf::Vector2f segmentSize) const
@@ -1115,6 +741,156 @@ namespace Server
 		};
 	}*/
 
+	nlohmann::json GameEngine::process(nlohmann::json request)
+	{
+		nlohmann::json response;
+		if (request.contains("action") && request["action"] == "create Player")
+		{
+			const string name = request["Name"].get<string>();
+			shared_ptr<Hero> hero = make_shared<Hero>(m_map.get(), name);
+			if (hero->registerSelf())
+			{
+				m_map->add(hero);
+			}
+
+			response["Player"] = HeroToJson(*hero);
+
+			response["status"] = "OK";
+		}
+		else if (request.contains("action") && request["action"] == "split")
+		{
+			string id = request["Id"];
+			auto obj = m_map->findObj(id);
+			if (obj)
+			{
+				std::shared_ptr<Hero> heroPtr = std::dynamic_pointer_cast<Hero>(obj);
+				heroPtr->split();
+				response["status"] = "OK";
+			}
+
+		}
+		else if (request.contains("action") && request["action"] == "feed")
+		{
+			string id = request["Id"];
+			auto obj = m_map->findObj(id);
+			if (obj)
+			{
+				std::shared_ptr<Hero> heroPtr = std::dynamic_pointer_cast<Hero>(obj);
+				//to do feed;
+				response["status"] = "OK";
+			}
+		}
+
+		else if (request.contains("action") && request["action"] == "ask pos mouse")
+		{
+			string id = request["Id"];
+			auto obj = m_map->findObj(id);
+			if (obj)
+			{
+				std::shared_ptr<Hero> heroPtr = std::dynamic_pointer_cast<Hero>(obj);
+				float x = request["mousePosition"]["x"];
+				float y = request["mousePosition"]["y"];
+
+				heroPtr->setPosMouse(x, y);
+				response["status"] = "OK";
+			}
+		}
+	/*	else if (request.contains("action") && request["action"] == "get View Info")
+		{
+			string id = request["Id"].get<string>();
+			auto obj = m_map->findObj(id);
+			if (obj)
+			{
+				response["logicSize"]["x"] = m_camera.getLogicSize().x;
+				response["logicSize"]["y"] = m_camera.getLogicSize().y;
+
+				response["zoom"] = m_camera.getZoom(hero->second->getMass(), minBotAndPlayerMass);
+				response["status"] = "OK";
+			}
+			else
+			{
+				response["status"] = "ERROR";
+			}
+		}*/
+
+		else if (request.contains("action") && request["action"] == "get Map Info")
+		{
+			response["mapSize"]["x"] = MapConstants::mapWidth;
+			response["mapSize"]["y"] = MapConstants::mapHeight;
+
+			response["status"] = "OK";
+		}
+
+		//else if (request.contains("action") && request["action"] == "ask update objects")
+		//{
+		//	if (m_TimeUpdateListObjects == 0.0f)
+		//	{
+		//		m_TimeUpdateListObjects = 1000.0f;
+		//		response["can update"] = true;
+		//	}
+		//	else
+		//	{
+		//		response["can updaete"] = false;
+		//	}
+		//	response["status"] = "OK";
+		//}
+		else if (request.contains("action") && request["action"] == "get Segment Info")
+		{
+			/*response["segmentSize"]["x"] = m_segmentSize.x;
+			response["segmentSize"]["y"] = m_segmentSize.y;
+
+			response["maxIndices"]["x"] = std::size(m_segments[0]);
+			response["maxIndices"]["y"] = std::size(m_segments);*/
+		}
+		else if (request.contains("action") && request["action"] == "get object")
+		{
+			string id = request["Id"].get<string>();
+			auto obj = m_map->findObj(id);
+			std::shared_ptr<Hero> player = std::dynamic_pointer_cast<Hero>(obj);
+			if (player)
+			{
+				auto& listObjects = m_map->getNearObjects(/*player->getViewArea()*/FloatRect(0, 0, 2490, 2490));
+				/*cout << listObjects.size() << endl;*/
+				nlohmann::json jsonArr = nlohmann::json::array();
+
+				for (auto& item : listObjects)
+				{
+					switch (item->getType())
+					{
+					case ObjectType::FOOD:
+						jsonArr.push_back(FoodToJson(*dynamic_pointer_cast<Food>(item)));
+						break;
+					case ObjectType::THORN:
+						jsonArr.push_back(ThornToJson(*dynamic_pointer_cast<Thorn>(item)));
+						break;
+					case ObjectType::PIECE:
+						jsonArr.push_back(PieceToJson(*dynamic_pointer_cast<Piece>(item)));
+						break;
+					case ObjectType::PLAYER:
+						jsonArr.push_back(HeroToJson(*dynamic_pointer_cast<Hero>(item)));
+						break;
+					case ObjectType::BOT:
+						jsonArr.push_back(BotToJson(*dynamic_pointer_cast<Bot>(item)));
+						break;
+					default:
+						break;
+					}
+				}
+				if (player->isSplitting)
+				{
+					jsonArr.push_back(HeroToJson(*dynamic_pointer_cast<Hero>(player)));
+				}
+				response["listObjects"] = jsonArr;
+				response["status"] = "OK";
+			}
+		}
+		else
+		{
+			response["status"] = "ERROR";
+		}
+		return response;
+	}
+
 	nlohmann::json GameEngine::BotToJson(Bot& bot)
 	{
 		auto botCol = static_cast<int>(bot.colB);
@@ -1125,11 +901,12 @@ namespace Server
 		Bot["Mass"] = bot.getMass();
 		Bot["Color"] = botCol;
 		Bot["Name"] = bot.getName();
-		Bot["Splitted"] = bot.isSplitted();
+		/*Bot["Splitted"] = bot.isSplitted();*/
 		Bot["Speed"]["x"] = bot.getSpeed().x;
 		Bot["Speed"]["y"] = bot.getSpeed().y;
-		Bot["Mouse"]["x"] = bot.getMouse().x;
-		Bot["Mouse"]["y"] = bot.getMouse().y;
+		/*Bot["Mouse"]["x"] = bot.getMouse().x;
+		Bot["Mouse"]["y"] = bot.getMouse().y;*/
+		Bot["Type"] = bot.getType();
 		
 		return Bot;
 	}
@@ -1140,13 +917,16 @@ namespace Server
 		Piece["id"] = piece.getID();
 		Piece["Center"] = { {"x", piece.getCenter().x},{ "y", piece.getCenter().y} };
 		Piece["Radius"] = piece.getRadius();
+		Piece["ParentId"] = piece.getParentID();
 		Piece["Mass"] = piece.getMass();
 		Piece["Color"] = piece.m_ParentColor;
 		Piece["Speed"]["x"] = piece.getSpeed().x;
 		Piece["Speed"]["y"] = piece.getSpeed().y;
-		Piece["maxV"] = piece.getMaxV();
+		Piece["Type"] = piece.getType();
+		Piece["MaxV"] = piece.getMaxV();
+	/*	Piece["maxV"] = piece.getMaxV();
 		Piece["ParentId"] = piece.getParentPointer()->getID();
-		Piece["isExcluded"] = piece.isExcludedFromMerge();
+		Piece["isExcluded"] = piece.isExcludedFromMerge();*/
 		return Piece;
 	}
 
@@ -1157,6 +937,7 @@ namespace Server
 		Food["Radius"] = food.getRadius();
 		Food["Color"] = colorToJson(food.getColor());
 		Food["id"] = food.getID();
+		Food["Type"] = food.getType();
 		nlohmann::json indicesJson = nlohmann::json::array();
 		
 		return Food;
@@ -1170,6 +951,7 @@ namespace Server
 		Feed["id"] = feed.getID();
 		Feed["Speed"]["x"] = feed.getSpeed().x;
 		Feed["Speed"]["y"] = feed.getSpeed().y;
+		Feed["Type"] = feed.getType();
 		return Feed;
 	}
 
@@ -1179,6 +961,7 @@ namespace Server
 		Thorn["Center"] = { {"x", thorn.getCenter().x},{ "y", thorn.getCenter().y} };
 		Thorn["Radius"] = thorn.getRadius();
 		Thorn["id"] = thorn.getID();
+		Thorn["Type"] = thorn.getType();
 		return Thorn;
 	}
 
@@ -1190,63 +973,63 @@ namespace Server
 		};
 	}
 
-	bool GameEngine::objInSegment(shared_ptr<Objects>& obj, int segFirstInd, int segSecondInd, Vector2f shift)
-	{
-		/*Vector2f rectMinPos = m_segments[segFirstInd][segSecondInd].m_leftUpperPos;
-		Vector2f rectMaxPos = { m_segments[segFirstInd][segSecondInd].m_leftUpperPos.x + m_segmentSize.x,  m_segments[segFirstInd][segSecondInd].m_leftUpperPos.y + m_segmentSize.y };
-		float closestX = clamp(obj->getCenter().x + shift.x, rectMinPos.x, rectMaxPos.x);
-		float closestY = clamp(obj->getCenter().y + shift.y, rectMinPos.y, rectMaxPos.y);
+	//bool GameEngine::objInSegment(shared_ptr<Objects>& obj, int segFirstInd, int segSecondInd, Vector2f shift)
+	//{
+	//	/*Vector2f rectMinPos = m_segments[segFirstInd][segSecondInd].m_leftUpperPos;
+	//	Vector2f rectMaxPos = { m_segments[segFirstInd][segSecondInd].m_leftUpperPos.x + m_segmentSize.x,  m_segments[segFirstInd][segSecondInd].m_leftUpperPos.y + m_segmentSize.y };
+	//	float closestX = clamp(obj->getCenter().x + shift.x, rectMinPos.x, rectMaxPos.x);
+	//	float closestY = clamp(obj->getCenter().y + shift.y, rectMinPos.y, rectMaxPos.y);
 
-		float deltaX = obj->getCenter().x - closestX;
-		float deltaY = obj->getCenter().y - closestY;
+	//	float deltaX = obj->getCenter().x - closestX;
+	//	float deltaY = obj->getCenter().y - closestY;
 
-		float dist = deltaX * deltaX + deltaY * deltaY;
+	//	float dist = deltaX * deltaX + deltaY * deltaY;
 
-		return dist <= obj->getRadius() * obj->getRadius();*/
-		return false;
-	}
+	//	return dist <= obj->getRadius() * obj->getRadius();*/
+	//	return false;
+	//}
 
-	void GameEngine::updatePlayersList(float diff)
-	{
-		/*for (auto& i = listHeroes.begin(); i != listHeroes.end();)
-		{
-			(*i)->TimeElapsed(diff);
-			if ((*i)->state == States::EATEN)
-			{
-				i++;
-				continue;
-			}
-			if ((*i)->state == States::READY_TO_NEXT_ACTION)
-			{
-				i = listHeroes.erase(i);
-			}
-			else
-			{
-				i++;
-			}
-		}*/
-	}
+	//void GameEngine::updatePlayersList(float diff)
+	//{
+	//	/*for (auto& i = listHeroes.begin(); i != listHeroes.end();)
+	//	{
+	//		(*i)->TimeElapsed(diff);
+	//		if ((*i)->m_state == States::EATEN)
+	//		{
+	//			i++;
+	//			continue;
+	//		}
+	//		if ((*i)->m_state == States::READY_TO_NEXT_ACTION)
+	//		{
+	//			i = listHeroes.erase(i);
+	//		}
+	//		else
+	//		{
+	//			i++;
+	//		}
+	//	}*/
+	//}
 
-	void GameEngine::updateFeedsList(float diff)
-	{
-		/*for (auto& i = m_ListFeeds.begin(); i != m_ListFeeds.end();)
-		{
-			(*i)->TimeElapsed(diff);
-			if ((*i)->state == States::EATEN)
-			{
-				i++;
-				continue;
-			}
-			if ((*i)->state == States::READY_TO_NEXT_ACTION)
-			{
-				i = m_ListFeeds.erase(i);
-			}
-			else
-			{
-				i++;
-			}
-		}*/
-	}
+	//void GameEngine::updateFeedsList(float diff)
+	//{
+	//	/*for (auto& i = listFeeds.begin(); i != listFeeds.end();)
+	//	{
+	//		(*i)->TimeElapsed(diff);
+	//		if ((*i)->m_state == States::EATEN)
+	//		{
+	//			i++;
+	//			continue;
+	//		}
+	//		if ((*i)->m_state == States::READY_TO_NEXT_ACTION)
+	//		{
+	//			i = listFeeds.erase(i);
+	//		}
+	//		else
+	//		{
+	//			i++;
+	//		}
+	//	}*/
+	//}
 
 	/*void GameEngine::allObjectsCollWithMap()
 	{
@@ -1262,7 +1045,7 @@ namespace Server
 			}
 		}
 
-		for (auto& f : m_ListFeeds)
+		for (auto& f : listFeeds)
 		{
 			if (isCollWithMap(f.second->getCenter()))
 				f.second->setCenter(getCoorCollWithMap(f.second->getCenter()));
@@ -1274,23 +1057,25 @@ namespace Server
 		}
 	}*/
 
-	void GameEngine::calcDirMoveBot(int diff)
+	/*void GameEngine::calcDirMoveBot(int diff)
 	{
-		for (auto& i = m_map.getGlobalList<Bot>().begin(); i != m_map.getGlobalList<Bot>().end(); i++)
+		for (auto& i = m_map.getList<Bot>().begin(); i != m_map.getList<Bot>().end(); i++)
 		{
-			if (i->second->state == States::EATEN)
+			if (i->second->m_state == States::EATEN)
 			{
 				continue;
 			}
 			Vector2f to(0.0, 0.0);
-			for (auto& j = m_map.getGlobalList<Food>().begin(); j != m_map.getGlobalList<Food>().end(); ++j)
+
+			for (auto& j = m_map.getList<Food>().begin(); j != m_map.getList<Food>().end(); ++j)
 			{
-				if (j->second->state == States::EATEN)
+				if (j->second->m_state == States::EATEN)
 					continue;
 				to += calcDistBotAndObj(*i->second, *j->second, i->second->getRadius() * 0.99f);
 			}
+
 			{
-				for (auto& j = m_map.getGlobalList<Thorn>().begin(); j != m_map.getGlobalList<Thorn>().end(); ++j)
+				for (auto& j = m_map.getList<Thorn>().begin(); j != m_map.getList<Thorn>().end(); ++j)
 				{
 					to -= 4.f * calcDistBotAndObj(*i->second, *j->second, min(i->second->getRadius(), j->second->getRadius()) * 0.99f);
 				}
@@ -1317,8 +1102,7 @@ namespace Server
 
 	bool GameEngine::checkAllCollision(Objects& obj)
 	{
-		return (checkCollision(&obj, m_map.getGlobalList<Hero>())|| checkCollision(&obj, m_map.getGlobalList<Bot>()) || checkCollision(&obj, m_map.getGlobalList<Thorn>()) || checkCollision(&obj, m_map.getGlobalList<Food>()));
+		return (checkCollision(&obj, m_map.getList<Hero>())|| checkCollision(&obj, m_map.getList<Bot>()) || checkCollision(&obj, m_map.getList<Thorn>()) || checkCollision(&obj, m_map.getList<Food>()));
 
-	}
-
+	}*/
 }

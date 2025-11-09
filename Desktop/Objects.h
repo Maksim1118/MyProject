@@ -9,6 +9,11 @@ enum class DrawType
 	allTiles,
 };
 
+enum class ObjectsType
+{
+	FOOD, THORN, BOT, PLAYER, PIECE, FEED
+};
+
 using namespace sf;
 using namespace std;
 class Objects

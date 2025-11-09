@@ -3,6 +3,8 @@
 #include "ObjectsServer.h"
 #include "Colors.h"
 
+#include "Respawn.h"
+
 #include <iostream>
 
 using namespace sf;
@@ -13,13 +15,13 @@ namespace Server
 	constexpr float _FoodMass = 25.0f;
 	const float _FoodRadius = sqrt(_FoodMass);
 
-	class Food : virtual public Objects
+	class Food : public Objects, public Respawn
 	{
 	public:
-		Food();
+		Food(IRegistrator* iRegistrator);
+		bool checkEaten(Objects& eatingObj) override;
+		bool Eat(Objects& obj) override;
 		void TimeElapsed(int diff);
-		bool checkEaten(MoveObject* obj) override;
-		void setEatenState() override;
 		bool eatable = true;
 
 		inline sf::Color getColor() const
@@ -29,12 +31,10 @@ namespace Server
 	protected:
 		ColorsFood m_ListColors;
 		int m_ColorIndex;
-		int respawnTime;
-		int elapsedRespTime;
-		bool m_isRespawnState;
-
 	private:
-		void update(int diff);
+		void respawn() override;
+		nlohmann::json toStaticJson() const override;
+		nlohmann::json toPersistentJson() const override;
 	};
 }
 

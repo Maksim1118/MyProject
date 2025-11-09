@@ -1,11 +1,34 @@
 #include "FeedServer.h"
 
+#include "IRegistrator.h"
+
+#include "Constants.h"
+
 namespace Server
 {
-	Feed::Feed() : MoveObject(Vector2f(0, 0), _FoodMass), parentCenter( 0.f,0.f ), parentRadius(0.f), m_IsUnderHero(true)
+	Feed::Feed(IRegistrator* iRegistrator) : MoveObject(iRegistrator, Vector2f(0, 0), GameConstants::FEED_MASS, Vector2f(0, 0)), parentCenter( 0.f,0.f ), parentRadius(0.f), m_IsUnderHero(true)
 	{
+		type = ObjectType::FEED;
+		m_state = ObjectState::Delitable;
 		colorNum = rand() % 6;
-		state = States::LIVE;
+	}
+
+	bool Feed::Eat(Objects& obj)
+	{
+		return false; //can't eat;
+	}
+
+	bool Feed::checkEaten(Objects& eatingObj)
+	{
+		if (!active || !eatingObj.isActive() || m_IsUnderHero)
+			return false;
+		if (eatingObj.Eating((*this), -getRadius()))
+		{
+			active = false;
+			registrator->unregisterAuxiliary(shared_from_this());
+			return true;
+		}
+		return false;
 	}
 
 	void Feed::TimeElapsed(int diff)
@@ -14,11 +37,13 @@ namespace Server
 		{
 			if (m_IsUnderHero)
 			{
-				state = States::LIVE;
+				m_state = States::LIVE;
 				m_IsUnderHero = false;
 			}
 		}*/
-		if (GetDist(parentCenter, getCenter()) > parentRadius * 1.2f)
+
+
+		if (GetCyclicDist(parentCenter, getCenter(), MapConstants::mapWidth, MapConstants::mapHeight) > parentRadius * 1.2f)
 		{
 			if (m_IsUnderHero)
 			{
@@ -54,19 +79,16 @@ namespace Server
 		parentRadius = newRadius;
 	}
 
-	bool Feed::checkEaten(MoveObject* obj)
+	//void Feed::setEatenState()
+	//{
+	//	m_state = States::READY_TO_REMOVE;
+	//}
+	nlohmann::json Feed::toStaticJson() const
 	{
-		if (!isLive() || !obj->isLive() || m_IsUnderHero)
-			return false;
-		if (obj->Eating((*this), -getRadius()))
-		{
-			setEatenState();
-			return true;
-		}
-		return false;
+		return nlohmann::json();
 	}
-	void Feed::setEatenState()
+	nlohmann::json Feed::toPersistentJson() const
 	{
-		state = States::READY_TO_REMOVE;
+		return nlohmann::json();
 	}
 }
