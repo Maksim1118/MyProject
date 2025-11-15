@@ -24,7 +24,6 @@ Bot.cpp "Piece.h" "Piece.cpp" "Feed.cpp" "Feed.h" "MoveObject.h" "MoveObject.cpp
 
 target_link_libraries(Desktop PRIVATE BaseLib)
 target_compile_features(Desktop PRIVATE cxx_std_17)
-target_include_directories(Desktop  PUBLIC ..\\jsonLib\\include)
 
 install(TARGETS Desktop)
 

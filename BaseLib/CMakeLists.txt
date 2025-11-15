@@ -8,5 +8,5 @@ FetchContent_MakeAvailable(SFML)
 
 add_library(BaseLib STATIC src/Map_Geometry.cpp "src/BaseFunctions.cpp")
 
-target_include_directories(BaseLib PUBLIC include)
+target_include_directories(BaseLib PUBLIC include ..\\jsonLib\\include)
 target_link_libraries(BaseLib sfml-graphics sfml-system sfml-window sfml-network sfml-graphics sfml-audio sfml-main)
