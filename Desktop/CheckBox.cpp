@@ -135,7 +135,6 @@ void CheckBox::setSize(const float sideSize)
 	Vector2u checkMarkSize = m_checkMark.getTexture()->getSize();
 	m_baseScale_CheckMark = min(sideSize / checkMarkSize.x, sideSize / checkMarkSize.y);
 	m_checkMark.setScale(m_baseScale_CheckMark, m_baseScale_CheckMark);
-	/*positionAdjusment();*/
 }
 
 void CheckBox::update(const int diff, const sf::Vector2f& mousePos)
@@ -147,8 +146,7 @@ void CheckBox::update(const int diff, const sf::Vector2f& mousePos)
 	m_curScale = SFML_SIMPLIFIED::approachWithClamp(m_curScale, targetScale, diff, scaleSpeed, minScale, maxScale);
 
 	m_Box.setScale(m_baseScale_Box * m_curScale, m_baseScale_Box * m_curScale);	
-	m_checkMark.setScale(m_baseScale_CheckMark * m_curScale, m_baseScale_CheckMark * m_curScale);
-	//positionAdjusment();
+	m_checkMark.setScale(m_baseScale_CheckMark * m_curScale, m_baseScale_CheckMark * m_curScale);;
 
 	m_Box.setTexture(m_hovered ? *blurBoxTex : *normBoxTex);
 }

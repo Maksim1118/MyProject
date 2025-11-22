@@ -27,8 +27,6 @@ public:
 	GameScene(SceneManager* manager);
 	virtual void HandleEvent(Event& event);
 	virtual void draw(RenderWindow& window);
-	//bool isCollWithMap(const Vector2f& pos);
-	//Vector2f getCoorCollWithMap(const Vector2f& pos);
 	virtual void TimeElapsed(int& diff);
 	Vector2f getCoorCollCameraWithMap(Vector2f& pos, float Width, float Height);
 	void setActive(const std::string& playerName);
@@ -53,17 +51,10 @@ public:
 			
 		}
 		void pieceToSides();
-		/*sf::Vector2f calcAttractionForcePiece(Piece* &piece, const sf::Vector2f& mousePos);
-		sf::Vector2f calcAccelerationPiece(const sf::Vector2f& F, Piece* & piece);
-		sf::Vector2f calcSpeedPiece(const sf::Vector2f& a, const sf::Vector2f& mousePos, int diff, Piece* & piece);*/
-		/*void updatePiecesPhysics();*/
-
 		void fillListObjects();
 		void insertInObjectsList(Objects* obj);
 	};
 private:
-	/*void cameraUpdate(float diff);
-	void settingCameraInterval();*/
 
 	std::pair<int, int> getSymetricRange(int count) const;
 private:

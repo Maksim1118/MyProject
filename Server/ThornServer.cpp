@@ -26,7 +26,6 @@ namespace Server
 
 		if (eatingObj.getMass() > _mass * 1.2f && eatingObj.Eating(*this, -getRadius()))
 		{
-			/*obj->readyToWaekend = true;*/
 			active = false;
 			registrator->unregisterAuxiliary(shared_from_this());
 			Respawn::reset();
@@ -34,21 +33,6 @@ namespace Server
 		}
 		return false;
 	}
-
-	/*nlohmann::json Thorn::toJson()
-	{
-		nlohmann::json res;
-		res["type"] = type;
-		auto staticJs = toStaticJson();
-		if (staticJs != lastSnapshot || staticSentDataTime >= ServerConstants::TIMER_SENT_STATIC_DATA) 
-		{
-			res["staticData"] = staticJs;
-			staticSentDataTime = 0;
-		}
-
-		res["persistentData"] = toPersistentJson();
-		return res;
-	}*/
 
 	void Thorn::TimeElapsed(int diff)
 	{

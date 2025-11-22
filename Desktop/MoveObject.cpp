@@ -8,7 +8,7 @@ MoveObject::MoveObject(Vector2f center, float radius, string id): Objects(center
 }
 
 void MoveObject::TimeElapsed(int diff)
-{/*
+{
 	float len = GetLen(difference);
 	float giveLen = 0.035f * diff;
 	if (len > 0)
@@ -24,9 +24,7 @@ void MoveObject::TimeElapsed(int diff)
 			Center += give;
 			difference -= give;
 		}
-	}*/
-	Center += difference;
-	difference = { 0.f, 0.f };
+	}
 	Center += V * (float)diff;
 }
 

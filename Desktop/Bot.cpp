@@ -44,36 +44,11 @@ void Bot::shiftPos(float offsetX, float offsetY)
 
 void Bot::TimeElapsed(int diff)
 {
-	/*if (splitted == true)
-	{
-		pieceToSides();
-	}*/
 	MoveObject::TimeElapsed(diff);
 	_shape.setRadius(_radius);
 	_shape.setPosition(Center.x - _shape.getRadius(), Center.y - _shape.getRadius());
 	name.setPosition(Center.x - name.getLocalBounds().width / 2, Center.y - name.getLocalBounds().height / 2);
 }
-//
-//void Bot::pieceToSides()
-//{
-//	for (auto& piece : pieces)
-//	{
-//		Vector2f center = piece->getCenter();
-//
-//		for (auto& piece2 : pieces)
-//		{
-//			float lenPiece2 = GetLen(piece->getCenter(), piece2->getCenter());
-//			float sumRadius = piece->getRadius() + piece2->getRadius();
-//			if (lenPiece2 < sumRadius)
-//			{
-//				Vector2f toPiece21 = getIdentityVector(piece2->getCenter() - center);
-//				piece2->setCenter(piece2->getCenter() + toPiece21 * (sumRadius - lenPiece2) / (float)2);
-//				piece->setCenter(piece->getCenter() - toPiece21 * (sumRadius - lenPiece2) / (float)2);
-//			}
-//
-//		}
-//	}
-//}
 
 Vector2f Bot::getDirection() const
 {

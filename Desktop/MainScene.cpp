@@ -6,14 +6,10 @@
 constexpr int timerCursorBlink = 500;
 constexpr int MAX_LENGTH_NAME = 15;
 
-//bool Options::_IsButtonClosePressed = false;
-
 MainScene::MainScene(SceneManager* manager)
 {
     _manager = manager;   
     current = nullptr;
-  /*  m_SettingScene = nullptr;
-    m_InputName = nullptr;*/
 
     BackgroundSprite.setTexture(*rec.textures[ResourceManager::Textures::MENU]);
 }
@@ -58,98 +54,6 @@ void MainScene::HandleEvent(Event& event)
           _manager->SetGameScene("jkfjg");
       }
     }
-
-
-    //if (m_SettingScene)
-    //{
-    //   /* m_SettingScene->HandleEvent(event, mousePos);
-    //    if (Options::_IsButtonClosePressed)
-    //    {
-    //        delete m_SettingScene;
-    //        m_SettingScene = nullptr;
-    //        current = nullptr;
-    //        Options::_IsButtonClosePressed = false;
-    //    }*/
-    //}
-
-    //else if (m_InputName)
-    //{
-    //    if (event.type == Event::KeyPressed && event.key.code == Keyboard::Escape)
-    //    {
-    //        deleteInputName();
-    //        unlockButtons();
-    //    }
-    //    else if (event.type == Event::KeyPressed && event.key.code == Keyboard::Enter && m_InputName)
-    //    {
-    //        _manager->SetGameScene(m_InputName->getString());
-    //        deleteInputName();
-    //    }
-
-    //    if (m_InputName)
-    //    {
-    //        m_InputName->handleEvent(event, m_MousePos);
-
-    //    }
-    //}
-    //if (event.type == sf::Event::MouseMoved)
-    //{
-    //    if (button1.isPoz(m_MousePos.x, m_MousePos.y))
-    //    {
-    //        current = &button1;
-    //    }
-    //    else if (button2.isPoz(m_MousePos.x, m_MousePos.y))
-    //    {
-    //        current = &button2;
-    //    }
-    //    else if (button3.isPoz(m_MousePos.x, m_MousePos.y))
-    //    {
-    //        current = &button3;
-    //    }
-    //    else
-    //    {
-    //        current = nullptr;
-    //    }
-    //}
-    //else if (event.type == sf::Event::MouseButtonPressed)
-    //{
-    //    if (current == &button1)
-    //    {
-    //        if (!m_InputName)
-    //        {
-    //            m_InputName = createInputName();
-    //            if (!m_InputName)
-    //            {
-    //                cerr << "error create Input Name\n";
-    //            }
-    //            else
-    //            {
-    //                lockButtons();
-    //            }
-
-    //        }
-
-    //        /*_manager->SetGameScene();*/
-    //    }
-    //    else if (current == &button2)
-    //    {
-    //        if (!m_SettingScene)
-    //        {
-    //            m_SettingScene = createSettingScene();
-    //            if (!m_SettingScene)
-    //            {
-    //                cerr << "error create Setting Scene\n";
-    //            }
-    //            else
-    //            {
-    //                lockButtons();
-    //            }
-    //        }
-    //    }
-    //    else if (current == &button3)
-    //    {
-    //        exit(0);
-    //    }
-    //}
 }
 void MainScene::TimeElapsed(int& diff)
 {
@@ -161,15 +65,6 @@ void MainScene::TimeElapsed(int& diff)
             m_currSubScene.reset();
         }
     }
-  /*  if (m_SettingScene)
-    {
-        m_SettingScene->TimeElapsed(diff);
-    }
-
-    else if (m_InputName)
-    {
-        m_InputName->TimeElapsed(diff);
-    }*/
 }
 MainScene::NickNameInput* MainScene::createInputName()
 {
@@ -179,11 +74,7 @@ MainScene::NickNameInput* MainScene::createInputName()
 
 void MainScene::deleteInputName()
 {
-   /* if (m_InputName)
-    {
-        delete m_InputName;
-        m_InputName = nullptr;
-    }*/
+
 }
 
 unique_ptr<SubScene> MainScene::createSettingScene()
@@ -201,11 +92,7 @@ unique_ptr<SubScene> MainScene::createSettingScene()
 
 void MainScene::deleteSettingScene()
 {
-   /* if (m_SettingScene)
-    {
-        delete m_SettingScene;
-        m_SettingScene = nullptr;
-    }*/
+
 }
 
 void MainScene::lockButtons()
@@ -227,20 +114,6 @@ void MainScene::unlockButtons()
 void MainScene::draw(RenderWindow& window)
 {
 
-    /*window.draw(BackgroundSprite);
-    if (m_SettingScene == nullptr)
-    {
-        if (current != nullptr)
-        {
-            current->drawBG(window);
-        }
-    }
-
-    if (m_InputName)
-    {
-        m_InputName->draw(window);
-    }*/
-   
     window.draw(BackgroundSprite);
     if (current)
     {
@@ -253,10 +126,6 @@ void MainScene::draw(RenderWindow& window)
     {
         m_currSubScene->draw(window);
     }
-   /* if (m_SettingScene)
-    {
-        m_SettingScene->draw(window);
-    }*/
 }
 
 MainScene::NickNameInput::NickNameInput()

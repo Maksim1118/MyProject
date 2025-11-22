@@ -25,34 +25,6 @@ namespace Server
 
 	float GetCyclicDist(const Vector2f& p1, const Vector2f& p2, float sizeW, float sizeH)
 	{
-		/*float halfX = fieldWidth / 2.f;
-		float halfY = fieldHeight / 2.f;
-		float lenX;
-		float lenY;
-
-		float diffX = p2.x - p1.x;
-		float absDiffX(fabs(diffX));
-		if (absDiffX > halfX)
-		{
-			lenX = pow(fieldWidth - absDiffX, 2);
-		}
-		else
-		{
-			lenX = pow(diffX, 2);
-		}
-
-		float diffY = p2.y - p1.y;
-		float absDiffY(fabs(diffY));
-
-		if (absDiffY > halfY)
-		{
-			lenY = pow(fieldHeight - absDiffY, 2);
-		}
-		else
-		{
-			lenY = pow(diffY, 2);
-		}
-		return sqrt(lenX + lenY);*/
 		Vector2f diff = GetCyclicDiff(p1, p2, sizeW, sizeH);
 		return hypot(diff.x, diff.y);
 	}
@@ -203,40 +175,6 @@ namespace Server
 
 	sf::Vector2f GetCyclicDiff(const Vector2f& from, const Vector2f& to, float sizeW, float sizeH)
 	{
-		/*float halfX = fieldWidth / 2.f;
-		float halfY = fieldHeight / 2.f;
-		Vector2f res;
-
-		if (p2.x - p1.x > halfX)
-		{
-			res.x = p1.x - p2.x + fieldWidth;
-		}
-		else if(p1.x - p2.x > halfX)
-		{
-			res.x = p1.x - p2.x - fieldWidth;
-		}
-		else
-		{
-			res.x = p1.x - p2.x;
-		}
-
-		if (p2.y - p1.y > halfY)
-		if (p2.y - p1.y > halfY)
-		if (p2.y - p1.y > halfY)
-		{
-			res.y = p1.y - p2.y + fieldHeight;
-		}
-		else if (p1.y - p2.y > halfY)
-		{
-			res.y = p1.y - p2.y - fieldHeight;
-		}
-		else
-		{
-			res.y = p1.y - p2.y;
-		}
-
-		return res;*/
-
 		float diffX = to.x - from.x;
 		float dx = toroidalDiff(diffX, sizeW);
 		float diffY = to.y - from.y;
@@ -253,10 +191,6 @@ namespace Server
 
 	bool pointInSegment(float p, float segmentStart, float segmentLength, float size)
 	{
-		/*float mid = segmentStart + segmentLength / 2.f;
-		float diff = toroidalDiff(mid - p, size);
-		float toroidalP = mid + diff;
-		return toroidalP > segmentStart && toroidalP < segmentStart + segmentLength;*/
 		assert(size > 0 && segmentLength >= 0 && "Invalid parameters");
 		float wrappedP = wrapCoordinate(p, size);
 		float wrappedStart = wrapCoordinate(segmentStart, size);

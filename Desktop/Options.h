@@ -1,65 +1,3 @@
-//#pragma once
-//#include <SFML/Graphics.hpp>
-//#include <SFML/Audio.hpp>
-//#include <fstream>
-//
-//using namespace sf;
-//using namespace std;
-//
-//class Options
-//{
-//public:
-//	Options();
-//	bool PosSlider(const float& x, const float& y);
-//	bool PosBox(const float& x, const float&  y);
-//	bool PosKey(const Text& text, const float& x, const float& y);
-//	bool PosButtonClose(const float& x, const float& y);
-//	bool PosButtonSave(const float& x, const float& y);
-//	void Saved();
-//	static void OpenSaved(const char* file);
-//	void CreateMus();
-//	Text  CreateTitle(const wstring& text, const int size);
-//	RectangleShape  CreateLineMus();
-//	RectangleShape  CreateRegulator();
-//	void moveSlider(int& mouseX);
-//	RectangleShape CreateCheckBox();
-//	RectangleShape CreateCheckMarkLine1();
-//	RectangleShape CreateCheckMarkLine2();
-//	Text handleKeyPressed(int& code);	
-//	static int SplitedKeyCode;
-//	static int FeededKeyCode;
-//	static float volume;
-//	static bool _isBoxPressed;
-//	static bool _isSaveActive;
-//	static bool _isKeySpliteChanged;
-//	static bool _isKeyFeedingChanged;
-//	static bool _IsButtonClosePressed;
-//	static float _WindowWidth;
-//	static float _WindowHeight;
-//protected:
-//	bool _isSliderPressed = false;
-//
-//	RectangleShape BackGround;
-//	RectangleShape	_LineMus;
-//	RectangleShape _Regulator;
-//	RectangleShape _Box;
-//	RectangleShape _CheckMark1;
-//	RectangleShape _CheckMark2;
-//
-//	Text Setting;
-//	Text Setting_1;
-//	Text Setting_2;
-//	Text Setting_3;
-//	Text Setting_4;
-//	Text Save;
-//	float tempvol{ 0 };
-//    bool tempbool = false;
-//	Text FeedingKeyCode;
-//	Text SpliteKeyCode;
-//	Sprite Close;
-//	Sprite SP;
-//};
-
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
@@ -67,26 +5,6 @@
 #include <string>
 
 #include "SettingConfig.h"
-
-
-//class SettingConfig
-//{
-//public:
-//	SettingConfig(const int volume, const bool isFullScreen, const char keyFeed, const char keySplit);
-//	int getVolume()const;
-//	void setVolume(const int volume);
-//	void setFullScreen(const bool fullScreen);
-//	bool isFullScreen() const;
-//	void setKeyCode(const keyBindType keyType, const int keyCode);
-//	int getCodeKeyFeed() const;
-//	int getCodeKeySplit() const;
-//private:
-//	int m_settingVolume;
-//	bool m_fullScreen;
-//	char m_key_Feed;
-//	char m_key_Split;
-//};
-
 
 struct Resolution
 {
@@ -190,33 +108,4 @@ private:
 	SettingConfig m_workingConfig;
 };
 
-//inline int SettingConfig::getVolume()const
-//{
-//	return m_settingVolume;
-//}
-//
-//inline void SettingConfig::setVolume(const int volume)
-//{
-//	m_settingVolume = volume;
-//}
-//
-//inline void SettingConfig::setFullScreen(const bool fullScreen)
-//{
-//	m_fullScreen = fullScreen;
-//}
-//
-//inline bool SettingConfig::isFullScreen() const
-//{
-//	return m_fullScreen;
-//}
-//
-//inline int SettingConfig::getCodeKeyFeed() const
-//{
-//	return static_cast<int>(m_key_Feed);
-//}
-//
-//inline int SettingConfig::getCodeKeySplit() const
-//{
-//	return static_cast<int>(m_key_Split);
-//}
 //

@@ -57,14 +57,11 @@ namespace Server {
 		virtual void TimeElapsed(int diff) = 0;
 		string  getDescription();
 		bool Eating(Objects& obj, float shift);
-		/*virtual void setEatenState() = 0;*/
 		bool isLive();
-		/*States m_state;*/
 		sf::Vector2i m_currSegIndices;
 		ObjectType getType() const;
 		ObjectState getState() const;
 		void unRegister();
-		/*nlohmann::json toJson();*/
 	protected:
 		virtual nlohmann::json toStaticJson() const = 0;
 		virtual nlohmann::json toPersistentJson() const = 0;

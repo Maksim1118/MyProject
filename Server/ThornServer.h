@@ -19,7 +19,6 @@ namespace Server
 		Thorn(IRegistrator* iRegistrator);
 		bool Eat(Objects& obj) override;
 		bool checkEaten(Objects& eatingObj) override;
-		/*nlohmann::json toJson()  override;*/
 		void TimeElapsed(int diff);
 	private:
 		nlohmann::json toStaticJson() const override;

@@ -87,8 +87,6 @@ namespace Server
 		Vector2f a = calcAcceleration(F, _mass);
 		V = calcSpeed(V, a, diff, maxV, kV);
 
-		cout << getID().substr(8, 4) << "  " << "Center: " << _center.x << "  " << _center.y << endl;
-
 		Move(V);
 
 		registrator->moveObj(shared_from_this());
@@ -127,16 +125,6 @@ namespace Server
 	{
 		timerActiveSpeed = TIMER_SPEED;
 	}
-
-	//void Piece::setMaxV(float newMaxV)
-	//{
-	//	maxV = newMaxV;
-	//}
-
-	//void Piece::setMass(float mass)
-	//{
-	//	_mass = mass;
-	//}
 
 	nlohmann::json Piece::toStaticJson() const
 	{
@@ -189,34 +177,4 @@ namespace Server
 			}
 		}
 	}
-
-	//void Piece::setEatenState()
-	//{
-	//	m_state = States::READY_TO_REMOVE;
-	//}
-
-	//bool Piece::isExcludedFromMerge() const
-	//{
-	//	return excludedFromMerge;
-	//}
-
-	//void Piece::enableMerge()
-	//{
-	//	mergeEnabled = true;
-	//	mergeExclusionTimerActive = 0;
-	//}
-
-	//void Piece::setV(Vector2f newV)
-	//{
-	//	V = newV;
-	//}
-
-	//float Piece::getMaxV()
-	//{
-	//	return maxV;
-	//}
-	//Bot* Piece::getParentPointer()
-	//{
-	//	return m_parent.lock().get();
-	//}
 }

@@ -20,7 +20,6 @@ public:
 	void shiftPos(float offsetX = 0, float offsetY = 0) override;
 	list<Piece*> pieces;
 protected:
-	/*void pieceToSides();*/
 	CircleShape _shape;
 	Text name;
 	bool m_Splitted = false;	

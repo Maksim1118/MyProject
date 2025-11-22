@@ -182,25 +182,6 @@ void ComboBox::setSize(const float width, const float height)
 	const float arrowX = frameRectGlobal.left + frameRectGlobal.width - paddingRightOffset - arrowRectGlobal.width;
 	const float arrowY = frameRectGlobal.top + (frameRectGlobal.height - arrowRectGlobal.height) / 2.f;
 	m_arrow.setPosition(arrowX, arrowY);
-
-	//unsigned int adjustedChSize = DEFAULT_CHAR_SIZE;
-	//float estTextHeight = static_cast<float>(adjustedChSize) * 1.2f; 
-
-	//while (estTextHeight < m_size.y * 0.7f && adjustedChSize < MAX_CHAR_SIZE)
-	//{
-	//	++adjustedChSize;
-	//	estTextHeight = static_cast<float>(adjustedChSize) * 1.2f;
-	//}
-
-	//while (estTextHeight > m_size.y * 0.7f && adjustedChSize > MIN_CHAR_SIZE)
-	//{
-	//	--adjustedChSize;
-	//	estTextHeight = static_cast<float>(adjustedChSize) * 1.2f;
-	//}
-
-	/*updateItemsChSize(adjustedChSize);
-	updateLayout();
-	updateSelectedText();*/
 }
 
 void ComboBox::handleEvent(const sf::Event& event, const sf::Vector2f& mousePos)

@@ -47,6 +47,7 @@ public:
         textures[Textures::FIELD] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\fieldBG.png");
         textures[Textures::THORN] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\thorn2.png");
         textures[Textures::BUTBG] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\BGButton.png");
+        // to do восстановить
         /*textures[Textures::BUTTON_FRAME_NORM] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\frameButtonNormTex.png");
         textures[Textures::BUTTON_FRAME_BLUR] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\frameButtonBlurTex.png");*/
         textures[Textures::SETTINGPICT] = loadTexture("D:\\HungryBall\\out\\build\\x64-Debug\\bin\\Resources\\image\\setting_picture.png");

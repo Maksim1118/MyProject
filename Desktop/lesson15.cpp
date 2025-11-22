@@ -27,24 +27,13 @@ Vector2f getViewSize()
     return Vector2f(widthRect, heightRect);
 }
 
-//bool Options::_isBoxPressed = false;
-//bool Options::_isSaveActive = false;
-//bool Options::_isKeySpliteChanged = false;
-//bool Options::_isKeyFeedingChanged = false;
 int main()
 {
     setlocale(LC_ALL, "ru");
-    /*Options::OpenSaved("SaveSettings.txt"); */
 
     ContextSettings settings;
     settings.antialiasingLevel = 12;
     RenderWindow window(VideoMode(1200, 1200), "HUNGRY BALLS", Style::Titlebar | Style::Close, settings);
- /*   Options::_WindowWidth = window.getSize().x;
-    Options::_WindowHeight = window.getSize().y;*/
-
-
-
-
 
     rec.load();
   
@@ -79,17 +68,9 @@ int main()
     nlohmann::json request;
     nlohmann::json response;
     PastTime time;
-    /*PastTime time2;*/
     while (window.isOpen())
     {
-        /*if (!isMusicPlaying)
-        {           
-            rec.music->setLoop(true);         
-            rec.music->play();
-  
-            isMusicPlaying = true;
-        }       */
-       /* rec.music->setVolume(Options::volume);*/
+
         mousePos = window.mapPixelToCoords(Mouse::getPosition(window));
         manager.GetCurrent()->updateMousePos(mousePos);
         Event event;
@@ -113,11 +94,9 @@ int main()
         time.update();
        
         int diff = time.getDeltaTime();
-       /* time2.update();*/
-       /* int diffEvents = time2.getDeltaTime();*/
+
         manager.GetCurrent()->TimeElapsed(diff);
-      /*  time2.update();
-        int diffTimeElapsed = time2.getDeltaTime();*/
+
         window.clear();
         manager.GetCurrent()->draw(window);
         window.draw(shape);
@@ -128,10 +107,6 @@ int main()
             window.draw(rect2);
         }     
         window.display();   
-      /*  time2.update();
-        int diffDraw = time2.getDeltaTime();*/
-
-      
     }
     rec.clear();
     return 0;

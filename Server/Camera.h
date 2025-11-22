@@ -8,8 +8,6 @@ namespace Server
 	{
 	public:
 		Camera(sf::Vector2f vSize);
-
-		/*void updateSize(sf::Vector2f screenSize);*/
 		sf::View getView() const;
 		sf::Vector2f m_viewSize;
 		

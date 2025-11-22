@@ -46,32 +46,6 @@ HoverButton& HoverButton::operator=(HoverButton&& other) noexcept
 	}
 	return *this;
 }
-//HoverButton::HoverButton(HoverButton&& other) noexcept
-//	: Drawable(std::move(other)), Transformable(std::move(other))
-//	,m_sprite(std::move(other.m_sprite))
-//	,m_isHover(other.m_isHover)
-//	,m_normalTex(other.m_normalTex)
-//	,m_hoverTex(other.m_hoverTex)
-//{
-//	other.m_normalTex = nullptr;
-//	other.m_hoverTex = nullptr;
-//}
-//HoverButton& HoverButton::operator=(HoverButton&& other) noexcept
-//{
-//	if (this != &other)
-//	{
-//		Drawable::operator=(std::move(other));
-//		Transformable::operator=(std::move(other));
-//		m_sprite = std::move(other.m_sprite);
-//		m_isHover = other.m_isHover;
-//		m_normalTex = other.m_normalTex;
-//		m_hoverTex = other.m_hoverTex;
-//
-//		other.m_normalTex = nullptr;
-//		other.m_hoverTex = nullptr;
-//	}
-//	return *this;
-//}
 
 void HoverButton::handleEvent(const Event& event, const Vector2f& mousePos)
 {

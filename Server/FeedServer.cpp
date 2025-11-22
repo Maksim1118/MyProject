@@ -33,16 +33,6 @@ namespace Server
 
 	void Feed::TimeElapsed(int diff)
 	{
-		/*if (GetLen(parentCenter, getCenter()) > parentRadius * 1.2)
-		{
-			if (m_IsUnderHero)
-			{
-				m_state = States::LIVE;
-				m_IsUnderHero = false;
-			}
-		}*/
-
-
 		if (GetCyclicDist(parentCenter, getCenter(), MapConstants::mapWidth, MapConstants::mapHeight) > parentRadius * 1.2f)
 		{
 			if (m_IsUnderHero)
@@ -79,10 +69,6 @@ namespace Server
 		parentRadius = newRadius;
 	}
 
-	//void Feed::setEatenState()
-	//{
-	//	m_state = States::READY_TO_REMOVE;
-	//}
 	nlohmann::json Feed::toStaticJson() const
 	{
 		return nlohmann::json();

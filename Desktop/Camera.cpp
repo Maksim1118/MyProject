@@ -1,11 +1,5 @@
 #include "Camera.h"
 
-//constexpr float minZoom = 0.3f;
-//constexpr float maxZoom = 1.5f;
-//constexpr float smoothing = 0.1f;
-//constexpr float scaleFactor = 100.f;
-//constexpr float logScale = 10.f;
-
 constexpr float ZOOM_SPEED = 1e-4;
 
 
@@ -49,45 +43,3 @@ const View Camera::getView() const
 {
 	return m_view;
 }
-
-//void Camera::setCenter(Vector2f center)
-//{
-//	m_view.setCenter(center);
-//}
-//
-//Vector2f Camera::getCenter() const
-//{
-//	return m_view.getCenter();
-//}
-//
-////Vector2f Camera::getSize() const
-////{
-////	/*return m_view.getSize();*/
-////	
-////}
-//
-//void Camera::updateSize(Vector2f screenSize)
-//{
-//	m_view.setSize(screenSize.x * m_currZoom, screenSize.y * m_currZoom);
-//}
-//
-//sf::View Camera::getView() const
-//{
-//	return m_view;
-//}
-//
-//void Camera::updateZoom(float diff, float playerCurRadius, float playerMinRadius)
-//{
-//	//float prop = (playerCurRadius - playerMinRadius) / (playerMaxRadius - playerMinRadius);
-//	//prop = clamp(prop, 0.f, 1.f);
-//	//float targZoom = minZoom + prop * (maxZoom - minZoom);
-//
-//	//m_currZoom += (targZoom - m_currZoom) * smoothing;
-//
-//	float diffRadius = playerCurRadius - playerMinRadius;
-//	float prop = std::log(diffRadius/scaleFactor + 1.f) / std::log(logScale);
-//	prop = std::clamp(prop, 0.f, 1.f);
-//	float targZoom = minZoom + prop * (maxZoom - minZoom);
-//
-//	m_currZoom += (targZoom - m_currZoom) * smoothing;
-//}

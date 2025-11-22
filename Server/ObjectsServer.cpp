@@ -109,21 +109,6 @@ namespace Server {
 		}
 	}
 
-	/*nlohmann::json Objects::toJson()
-	{
-		nlohmann::json res;
-		res["type"] = type;
-		auto staticJs = toStaticJson();
-		if (staticJs != lastSnapshot || staticSentDataTime >= ServerConstants::TIMER_SENT_STATIC_DATA)
-		{
-			res["staticData"] = staticJs;
-			staticSentDataTime = 0;
-		}
-
-		res["persistentData"] = toPersistentJson();
-		return res;
-	}*/
-
 	void Objects::initOffsetSentTime()
 	{
 		staticSentDataTime = genNumber<int>(-1, ServerConstants::TIMER_SENT_STATIC_DATA - 1);

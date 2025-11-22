@@ -25,15 +25,6 @@ namespace Server
 		PieceState getAbility() const;
 		const std::string& getParentID() const;
 		void setTimerSpeed();
-		/*void setV(Vector2f newV);
-		void setMaxV(float newMaxV);
-		void setEatenState() override;
-		bool isExcludedFromMerge() const;*/
-		/*float getMaxV();*/
-	/*	Bot* getParentPointer();*/
-		/*void setMass(float mass);
-
-		void enableMerge();*/
 		int m_ParentColor;
 
 		static constexpr float koefMax_V = 3.5f;

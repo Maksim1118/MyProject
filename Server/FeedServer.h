@@ -14,7 +14,6 @@ namespace Server
 		void setV(Vector2f& newV);
 		void setParentCenter(Vector2f& newCenter);
 		void setParentRadius(float newRadius);
-	/*	void setEatenState() override;*/
 	private:
 		nlohmann::json toStaticJson() const override;
 		nlohmann::json toPersistentJson() const override;

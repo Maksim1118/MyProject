@@ -14,8 +14,7 @@ Piece::Piece(Vector2f center, float  radius, int Col, string id, const string& p
 
 void Piece::TimeElapsed(int diff)
 {
-
-	/*float len = GetLen(Mouse);
+	float len = GetLen(Mouse);
 	float radius = getRadius();
 
 	float localMaxV = maxV;
@@ -28,12 +27,11 @@ void Piece::TimeElapsed(int diff)
 	Vector2f d = getIdentityVector(Mouse);
 	Vector2f f = calcAttractionForce(d, 0.3f);
 	Vector2f a = calcAcceleration(f, m_mass);
-	V = calcSpeed(V, a, diff, localMaxV, 1.f);*/
+	V = calcSpeed(V, a, diff, localMaxV, 1.f);
 
 	MoveObject::TimeElapsed(diff);
 	_shape.setRadius(_radius);
 	_shape.setPosition(Center.x - _radius, Center.y - _radius);
-	/*cout << "CenterPiece: " << Center.x << " " << Center.y << endl;*/
 }
 
 void Piece::draw(RenderWindow& window) const

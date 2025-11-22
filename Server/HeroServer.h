@@ -20,19 +20,15 @@ namespace Server
 	public:
 		Hero(IRegistrator* iRegistrator,/* std::unordered_map<std::string, std::shared_ptr<Feed>>& feeds, */const std::string& name);
 		bool checkEaten(Objects& eatingObj) override;
-		/*Hero& operator =(const Hero&);*/
-		/*void setFeeded();*/
 		bool isFeeded();
 		void TimeElapsed(int diff)override;
 		sf::FloatRect getViewArea() const;
 
 		bool isGameOver();
 	private:
-		/*std::unordered_map <std::string, std::shared_ptr<Feed>>&listFeeds;*/
 		bool Feeded;
 		bool m_isGameOver;
 	private:
-		/*void createFeed(Objects& obj);*/
 		nlohmann::json toStaticJson() const override;
 		nlohmann::json toPersistentJson() const override;
 	};

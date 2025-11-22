@@ -25,10 +25,4 @@ namespace Server
 	{
 
 	}
-
-	/*void Camera::updateSize(Vector2f screenSize)
-	{
-		m_view.setSize(screenSize.x * m_currZoom, screenSize.y * m_currZoom);
-	}*/
-
 }
