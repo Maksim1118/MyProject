@@ -58,9 +58,10 @@ namespace Server
 	{
 		if (!initialized)
 		{
-		    fillObjects<Food>(50, [this]() { return createObj<Food>(static_cast<IRegistrator*>(this)); });
+		    fillObjects<Food>(100, [this]() { return createObj<Food>(static_cast<IRegistrator*>(this)); });
 			fillObjects<Thorn>(1, [this]() { return createObj<Thorn>(static_cast<IRegistrator*>(this)); });
-			fillObjects<Bot>(5, [this]() { return createObj<Bot>(static_cast<IRegistrator*>(this)); });
+			fillObjects<Bot>(10, [this]() { return createObj<Bot>(static_cast<IRegistrator*>(this)); });
+			m_rTree->print();
 			initialized = true;
 		}
 	}
@@ -154,12 +155,12 @@ namespace Server
 
 	void Map::registerAuxiliary(std::shared_ptr<Objects> obj)
 	{
-		m_rTree->insert(obj->getBounds(), obj);
+		m_rTree->insert(obj->getMBR(), obj);
 	}
 
 	void Map::unregisterAuxiliary(std::shared_ptr<Objects> obj)
 	{
-		m_rTree->remove(obj->getID(), obj->getBounds());
+		m_rTree->remove(obj->getID(), obj->getMBR());
 	}
 
 	template<typename T, typename ...Args>
@@ -189,10 +190,10 @@ namespace Server
 
 		for (auto& eatObj: listObjects)
 		{
-			auto nearObjects = m_rTree->queryIntersections(eatObj.second->getBounds());
+			auto nearObjects = m_rTree->queryIntersections(eatObj.second->getMBR());
 			for (auto& nearObj: nearObjects)
 			{
-				if (&eatObj.second == &nearObj)
+				if (eatObj.second.get() == nearObj.get())
 				{
 					continue;
 				}

@@ -22,6 +22,7 @@ namespace Server
 		bool checkEaten(Objects& eatingObj) override;
 		bool Eat(Objects& obj) override;
 		void TimeElapsed(int diff);
+		sf::FloatRect getMBR() const override;
 		bool eatable = true;
 
 		inline sf::Color getColor() const
@@ -31,6 +32,8 @@ namespace Server
 	protected:
 		ColorsFood m_ListColors;
 		int m_ColorIndex;
+	private:
+		FloatRect localBounds;
 	private:
 		void respawn() override;
 		nlohmann::json toStaticJson() const override;

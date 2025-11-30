@@ -29,6 +29,44 @@ namespace Server
 		return hypot(diff.x, diff.y);
 	}
 
+	std::vector<sf::FloatRect> normalizeRect(const sf::FloatRect& r, float sizeW, float sizeH)
+	{
+		vector<FloatRect> parts;
+		float left = wrapCoordinate(r.left, sizeW);
+		float top = wrapCoordinate(r.top, sizeH);
+		float right = left + r.width;
+		float bottom = top + r.height;
+
+		if (right > sizeW)
+		{
+			parts.emplace_back(left, top, sizeW - left, r.height);
+			parts.emplace_back(0, top, right - sizeW, r.height);
+		}
+		else
+		{
+			parts.emplace_back(left, top, r.width, r.height);
+		}
+
+		vector<FloatRect> finalParts;
+		for (const auto& p : parts)
+		{
+			float pTop = p.top;
+			float pBottom = pTop + p.height;
+
+			if (pBottom > sizeH)
+			{
+				finalParts.emplace_back(p.left, pTop, p.width, sizeH - pTop);
+				finalParts.emplace_back(p.left, 0, p.width, pBottom - sizeH);
+			}
+			else
+			{
+				finalParts.push_back(p);
+			}
+		}
+
+		return finalParts;
+	}
+
 	bool containsRect(const sf::FloatRect& outer, const sf::FloatRect& inner)
 	{
 		return inner.left >= outer.left &&

@@ -10,6 +10,7 @@ namespace Server
 		Feed(IRegistrator* iRegistrator);
 		bool Eat(Objects& obj) override;
 		bool checkEaten(Objects& eatingObj) override;
+		sf::FloatRect getMBR() const override;
 		void TimeElapsed(int diff);
 		void setV(Vector2f& newV);
 		void setParentCenter(Vector2f& newCenter);

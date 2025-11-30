@@ -94,6 +94,11 @@ namespace Server
 		updateAbility(diff);
 	}
 
+	sf::FloatRect Piece::getMBR() const
+	{
+		return { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
+	}
+
 	void Piece::setTarget(const sf::Vector2f& targetP)
 	{
 		target = targetP;

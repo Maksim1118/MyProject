@@ -14,11 +14,11 @@ namespace Server
 	struct Entry
 	{
 		std::weak_ptr<Objects> obj;
-		sf::FloatRect mbr;
 		std::shared_ptr<Node> children;
+		sf::FloatRect getMBR() const;
 	};
 
-	class Node
+	class Node: public I_MBR
 	{
 	public:
 		bool isLeaf;
@@ -29,9 +29,10 @@ namespace Server
 
 		Node(bool leaf = true);
 		
-		sf::FloatRect getMBR() const;
+		sf::FloatRect getMBR() const override;
 
 		void invalidateMBR();
+		void print(int level = 0);
 	private:
 		sf::FloatRect calculateMBR() const;
 	};
@@ -44,8 +45,12 @@ namespace Server
 		bool remove(const std::string& id, const sf::FloatRect& localMBR);
 		void update(std::shared_ptr<Objects> obj);
 		std::vector<std::shared_ptr<Objects>> queryIntersections(const sf::FloatRect& queryRect) const;
-	private:
+		void print();
+	protected:
 		shared_ptr<Node> root;
+		static const int MAX_ENTRIES = 4;
+		static const int MIN_ENTRIES = (MAX_ENTRIES + 1) / 2;
+	protected: 
 
 		std::shared_ptr<Node> chooseLeaf(std::shared_ptr<Node> node, const sf::FloatRect& mbr);
 		bool removeRecursive(std::shared_ptr<Node> node, const std::string& id, const sf::FloatRect& localMBR);
@@ -53,7 +58,6 @@ namespace Server
 		void splitNode(std::shared_ptr<Node> node);
 		void adjustTree(std::shared_ptr<Node> node);
 		void queryIntersectionsRecursive(std::shared_ptr<Node> node, const sf::FloatRect& queryRect, std::vector<std::shared_ptr<Objects>>& results) const;
-
 	};
 }
 

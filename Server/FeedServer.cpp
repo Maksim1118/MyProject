@@ -31,6 +31,11 @@ namespace Server
 		return false;
 	}
 
+	sf::FloatRect Feed::getMBR() const
+	{
+		return { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
+	}
+
 	void Feed::TimeElapsed(int diff)
 	{
 		if (GetCyclicDist(parentCenter, getCenter(), MapConstants::mapWidth, MapConstants::mapHeight) > parentRadius * 1.2f)

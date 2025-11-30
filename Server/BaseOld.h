@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <vector>
 
 constexpr int fieldWidth = 2500;
 constexpr int fieldHeight = 2500;
@@ -11,6 +12,8 @@ namespace Server
 	float GetLen(const Vector2f& p1, const Vector2f& p2);
 	float GetLen(const Vector2f& vector);
 	float GetCyclicDist(const Vector2f& p1, const Vector2f& p2, float sizeW, float sizeH);
+	std::vector<sf::FloatRect> normalizeRect(const sf::FloatRect& r, float sizeW, float sizeH);
+
 
 	bool containsRect(const sf::FloatRect& outer, const sf::FloatRect& inner);
 	bool cyclicIntersectsRect(const sf::FloatRect& r1, const sf::FloatRect& r2, float sizeW, float sizeH);

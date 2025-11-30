@@ -128,10 +128,15 @@ namespace Server
 		}
 	}
 
+	sf::FloatRect Bot::getMBR() const
+	{
+		return { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
+	}
+
 	Vector2f Bot::calcTargetPoint() const 
 	{
 		float viewR = GROWTH_FACTOR * pow(_mass + 1, 0.4f);
-		float wRect = max(MapConstants::mapWidth, viewR + viewR);
+		float wRect = max(MapConstants::mapWidth - 2, viewR + viewR);
 		Vector2f positionRect = { _center.x - viewR, _center.y - viewR };
 		auto& list = registrator->getNearObjects(FloatRect(positionRect,Vector2f(wRect, wRect)));
 

@@ -20,6 +20,7 @@ namespace Server
 		bool checkEaten(Objects& eatingObj) override;
 		bool Eat(Objects& obj) override;
 		void TimeElapsed(int diff) override;
+		sf::FloatRect getMBR()const override;
 		void setTarget(const sf::Vector2f& targetP);
 		void hungry(int diff);
 		PieceState getAbility() const;

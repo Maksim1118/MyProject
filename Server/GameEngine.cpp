@@ -56,7 +56,6 @@ namespace Server
 		auto heroCol = static_cast<int>(hero.colB);
 		Hero["id"] = hero.getID();
 		Hero["Center"] = { {"x", hero.getCenter().x},{ "y", hero.getCenter().y} };
-		
 		Hero["Radius"] = hero.getRadius();
 		Hero["Color"] = heroCol;
 		Hero["Name"] = hero.getName();
@@ -75,7 +74,6 @@ namespace Server
 	void GameEngine::TimeElapsed(int& diff)
 	{
 		m_map->TimeElapsed(diff);
-		
 	}
 
 	nlohmann::json GameEngine::process(nlohmann::json request)
@@ -156,7 +154,7 @@ namespace Server
 			std::shared_ptr<Hero> player = std::dynamic_pointer_cast<Hero>(obj);
 			if (player)
 			{
-				auto& listObjects = m_map->getNearObjects(FloatRect(0, 0, 2490, 2490));
+				auto& listObjects = m_map->getNearObjects(FloatRect(0, 0, MapConstants::mapWidth - 2, MapConstants::mapHeight - 2));
 				nlohmann::json jsonArr = nlohmann::json::array();
 
 				for (auto& item : listObjects)

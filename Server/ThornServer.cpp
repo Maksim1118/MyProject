@@ -13,6 +13,8 @@ namespace Server
 	{
 		type = ObjectType::THORN;
 		m_state = ObjectState::Respawnable;
+
+		localBounds = { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
 	}
 
 	bool Thorn::Eat(Objects& obj)
@@ -48,6 +50,11 @@ namespace Server
 		{
 			staticSentDataTime += diff;
 		}
+	}
+
+	sf::FloatRect Thorn::getMBR() const
+	{
+		return localBounds;
 	}
 
 	nlohmann::json Thorn::toStaticJson() const

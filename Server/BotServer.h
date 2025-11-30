@@ -26,6 +26,7 @@ namespace Server
 		bool Eat(Objects& obj) override;
 		bool checkEaten(Objects& eatingObj) override;
 		virtual void removePiece(const std::string& id);
+		sf::FloatRect getMBR()const override;
 		//temp var 
 		bool isSplitting = false;
 		void TimeElapsed(int diff)override;

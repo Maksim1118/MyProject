@@ -30,7 +30,13 @@ namespace Server {
 		LIVE, EATEN, READY_TO_REMOVE, READY_TO_RESPAWN, READY_TO_LIVE
 	};
 
-	class Objects: public std::enable_shared_from_this<Objects>
+	class I_MBR
+	{
+	public:
+		virtual sf::FloatRect getMBR()const = 0;
+	};
+
+	class Objects: public std::enable_shared_from_this<Objects>, public I_MBR
 	{
 	public:
 		Objects(IRegistrator* iRegistrator, Vector2f center, float mass);
@@ -38,6 +44,7 @@ namespace Server {
 		virtual bool Eat(Objects& obj) = 0;
 		bool isActive();
 		virtual bool checkEaten(Objects& eatingObj) = 0;
+		sf::FloatRect getMBR()const override = 0;
 
 		using UnRegisterFunc = std::function<void(const std::string&)>;
 
@@ -48,7 +55,6 @@ namespace Server {
 		void setCenter(Vector2f& center);
 		void setLive();
 		Vector2f getCenter() const;
-		sf::FloatRect getBounds() const;
 		const std::string & getID() const;
 		float getRadius()const;
 		const float getMass()const;

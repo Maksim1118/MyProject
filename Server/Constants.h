@@ -18,9 +18,9 @@ namespace Server
 		constexpr size_t MAX_COUNT_PIECES = 8;
 		constexpr float IMPULSE_FORCE = 1e-2f;
 		constexpr float FRICTION = 0.03f;
-		constexpr float HUNGRY_KOEF = 4e-6;
+		constexpr float HUNGRY_KOEF = -4e-6;
 		constexpr float FORCE_KOEF = 40.f;
-		constexpr float MAX_V = 2.0f;
+		constexpr float MAX_V = 2.0f; //2.0f
 	}
 
 	namespace ServerConstants

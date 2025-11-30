@@ -66,10 +66,6 @@ namespace Server {
 		return _center;
 	}
 
-	sf::FloatRect Objects::getBounds() const
-	{
-		return sf::FloatRect( _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f);
-	}
 	const std::string& Objects::getID() const
 	{
 		return id;
