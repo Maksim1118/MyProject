@@ -22,7 +22,6 @@ namespace Server
 		void TimeElapsed(int diff);
 		sf::FloatRect getMBR()const override;
 	private:
-		FloatRect localBounds;
 		nlohmann::json toStaticJson() const override;
 		nlohmann::json toPersistentJson() const override;
 		void respawn() override;

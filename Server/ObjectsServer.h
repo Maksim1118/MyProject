@@ -81,6 +81,9 @@ namespace Server {
 		ObjectType type;
 		ObjectState m_state;
 		bool m_isLive;
+
+		//только для статических объектов
+		mutable FloatRect localBounds;
 	private:
 		void initOffsetSentTime();
 	private:

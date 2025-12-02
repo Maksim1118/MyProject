@@ -17,8 +17,6 @@ namespace Server
 		m_state = ObjectState::Respawnable;
 		m_ListColors = getFoodColors();
 		m_ColorIndex = genNumber<size_t>(0, m_ListColors.size() - 1);
-
-		localBounds = { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
 	}
 
 	bool Food::checkEaten(Objects& eatingObj)
@@ -54,6 +52,10 @@ namespace Server
 
 	sf::FloatRect Food::getMBR() const
 	{
+		if (_center.x != localBounds.left)
+		{
+			localBounds = { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
+		}
 		return localBounds;
 	}
 

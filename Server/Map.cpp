@@ -175,7 +175,7 @@ namespace Server
 		for (int i = 0; i < listSize; ++i)
 		{
 			shared_ptr<T> obj = factory();
-			obj->registerSelf();
+			if(!obj->registerSelf()) return;
 			shared_ptr<Objects> baseObj = static_pointer_cast<Objects>(obj);
 			listObjects[baseObj->getID()] = baseObj;
 		}

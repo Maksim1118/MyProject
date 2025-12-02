@@ -33,8 +33,6 @@ namespace Server
 		ColorsFood m_ListColors;
 		int m_ColorIndex;
 	private:
-		FloatRect localBounds;
-	private:
 		void respawn() override;
 		nlohmann::json toStaticJson() const override;
 		nlohmann::json toPersistentJson() const override;

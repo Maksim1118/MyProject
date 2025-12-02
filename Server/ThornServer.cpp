@@ -13,8 +13,6 @@ namespace Server
 	{
 		type = ObjectType::THORN;
 		m_state = ObjectState::Respawnable;
-
-		localBounds = { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
 	}
 
 	bool Thorn::Eat(Objects& obj)
@@ -54,6 +52,10 @@ namespace Server
 
 	sf::FloatRect Thorn::getMBR() const
 	{
+		if (_center.x != localBounds.left)
+		{
+			localBounds = { _center.x - getRadius(), _center.y - getRadius(), getRadius() * 2.f, getRadius() * 2.f };
+		}
 		return localBounds;
 	}
 
